@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "default_action": "deny",
+  "memory_kinds": [
+    {
+      "id": "stable_preference",
+      "requires_repo_anchor": false,
+      "ttl_days": 365
+    },
+    {
+      "id": "durable_workflow_rule",
+      "requires_repo_anchor": true,
+      "ttl_days": 180
+    },
+    {
+      "id": "project_fact",
+      "requires_repo_anchor": true,
+      "ttl_days": 30
+    },
+    {
+      "id": "volatile_task_state",
+      "requires_repo_anchor": true,
+      "ttl_days": 7
+    },
+    {
+      "id": "external_claim",
+      "requires_repo_anchor": true,
+      "ttl_days": 1
+    }
+  ],
+  "source_class_rules": [
+    {
+      "source_class": "repo_state",
+      "memory_action": "allow",
+      "allowed_memory_kinds": [
+        "project_fact",
+        "volatile_task_state"
+      ],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "repo_instructions",
+      "memory_action": "allow",
+      "allowed_memory_kinds": [
+        "durable_workflow_rule",
+        "project_fact"
+      ],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "user_message",
+      "memory_action": "review_only",
+      "allowed_memory_kinds": [
+        "stable_preference",
+        "durable_workflow_rule",
+        "volatile_task_state"
+      ],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "operator_contract",
+      "memory_action": "allow",
+      "allowed_memory_kinds": [
+        "project_fact",
+        "volatile_task_state"
+      ],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "global_control",
+      "memory_action": "review_only",
+      "allowed_memory_kinds": [
+        "durable_workflow_rule"
+      ],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "tool_output",
+      "memory_action": "review_only",
+      "allowed_memory_kinds": [
+        "project_fact",
+        "volatile_task_state"
+      ],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "session_memory",
+      "memory_action": "deny",
+      "allowed_memory_kinds": [],
+      "requires_fresh_anchor": false
+    },
+    {
+      "source_class": "retrieved_web",
+      "memory_action": "deny",
+      "allowed_memory_kinds": [],
+      "requires_fresh_anchor": true
+    },
+    {
+      "source_class": "untrusted_external",
+      "memory_action": "deny",
+      "allowed_memory_kinds": [],
+      "requires_fresh_anchor": true
+    }
+  ]
+}

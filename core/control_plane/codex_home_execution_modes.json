@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "mode_classes": [
+    {
+      "mode": "preserve_only",
+      "kind": "base",
+      "description": "Keep the authoritative surface in place in the current phase; do not use archive, quarantine, or rotation by default."
+    },
+    {
+      "mode": "reversible_only",
+      "kind": "base",
+      "description": "Any cleanup path must remain reversible in the current phase, typically through quarantine, archive, or bounded rotation."
+    },
+    {
+      "mode": "archive_only",
+      "kind": "base",
+      "description": "Cleanup may proceed only through an explicit continuity-preserving archive or evidence flow."
+    },
+    {
+      "mode": "rotation_allowed",
+      "kind": "modifier",
+      "description": "Bounded retention rotation is allowed as long as the authoritative lookup surface stays stable."
+    },
+    {
+      "mode": "tool_only",
+      "kind": "modifier",
+      "description": "Mutations must go through an owning tool or packaged workflow instead of ad hoc filesystem edits."
+    },
+    {
+      "mode": "manual_review_only",
+      "kind": "modifier",
+      "description": "No unattended execution; operator review remains mandatory."
+    }
+  ],
+  "selector_modes": [
+    {
+      "selector_type": "core_category",
+      "selector": "global_map",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "core_category",
+      "selector": "home_summary",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "core_category",
+      "selector": "config_live",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "cache",
+      "execution_modes": [
+        "reversible_only",
+        "rotation_allowed",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "state",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "temp",
+      "execution_modes": [
+        "reversible_only",
+        "rotation_allowed",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "runtime_marker",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "sessions",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "sessions_archive",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "archived_sessions",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "index",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "memory",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "attachments",
+      "execution_modes": [
+        "preserve_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "shell_snapshots",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "config_snapshot",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "productization_workspace",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "project_overlay",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "reference_bundle",
+      "execution_modes": [
+        "archive_only",
+        "manual_review_only"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "shared_asset_bundle",
+      "execution_modes": [
+        "reversible_only",
+        "tool_only",
+        "manual_review_only"
+      ]
+    }
+  ]
+}

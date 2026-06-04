@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "surfaces": [
+    {
+      "category": "global_map",
+      "root_path": "AGENTS.md",
+      "canonical_path": "AGENTS.md",
+      "authoritative_at_root": true,
+      "required": true,
+      "move_gate": "future compatibility phase required"
+    },
+    {
+      "category": "home_summary",
+      "root_path": "README.md",
+      "canonical_path": "README.md",
+      "authoritative_at_root": true,
+      "required": true,
+      "move_gate": "future compatibility phase required"
+    },
+    {
+      "category": "config_live",
+      "root_path": "config.toml",
+      "canonical_path": "config.toml",
+      "authoritative_at_root": true,
+      "required": true,
+      "move_gate": "future compatibility phase required"
+    }
+  ]
+}

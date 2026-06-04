@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "profiles": [
+    {
+      "id": "strict",
+      "max_total_chars": 9000,
+      "max_items": 10,
+      "max_chars_per_item": 2000,
+      "min_chars_per_item": 180,
+      "reserved_source_classes": [
+        "repo_state",
+        "repo_instructions",
+        "user_message"
+      ],
+      "drop_order": [
+        "session_memory",
+        "untrusted_external",
+        "retrieved_web",
+        "tool_output",
+        "global_control",
+        "operator_contract",
+        "user_message",
+        "repo_state",
+        "repo_instructions"
+      ],
+      "source_class_char_limits": [
+        {
+          "source_class": "repo_state",
+          "max_chars": 2000
+        },
+        {
+          "source_class": "repo_instructions",
+          "max_chars": 2000
+        },
+        {
+          "source_class": "user_message",
+          "max_chars": 1500
+        },
+        {
+          "source_class": "operator_contract",
+          "max_chars": 1400
+        },
+        {
+          "source_class": "global_control",
+          "max_chars": 1000
+        },
+        {
+          "source_class": "tool_output",
+          "max_chars": 1200
+        },
+        {
+          "source_class": "session_memory",
+          "max_chars": 600
+        },
+        {
+          "source_class": "retrieved_web",
+          "max_chars": 900
+        },
+        {
+          "source_class": "untrusted_external",
+          "max_chars": 600
+        }
+      ]
+    },
+    {
+      "id": "balanced",
+      "max_total_chars": 12000,
+      "max_items": 12,
+      "max_chars_per_item": 2400,
+      "min_chars_per_item": 200,
+      "reserved_source_classes": [
+        "repo_state",
+        "repo_instructions",
+        "user_message"
+      ],
+      "drop_order": [
+        "session_memory",
+        "untrusted_external",
+        "retrieved_web",
+        "tool_output",
+        "global_control",
+        "operator_contract",
+        "user_message",
+        "repo_state",
+        "repo_instructions"
+      ],
+      "source_class_char_limits": [
+        {
+          "source_class": "repo_state",
+          "max_chars": 2200
+        },
+        {
+          "source_class": "repo_instructions",
+          "max_chars": 2400
+        },
+        {
+          "source_class": "user_message",
+          "max_chars": 1800
+        },
+        {
+          "source_class": "operator_contract",
+          "max_chars": 1800
+        },
+        {
+          "source_class": "global_control",
+          "max_chars": 1400
+        },
+        {
+          "source_class": "tool_output",
+          "max_chars": 1800
+        },
+        {
+          "source_class": "session_memory",
+          "max_chars": 800
+        },
+        {
+          "source_class": "retrieved_web",
+          "max_chars": 1200
+        },
+        {
+          "source_class": "untrusted_external",
+          "max_chars": 800
+        }
+      ]
+    },
+    {
+      "id": "exploratory",
+      "max_total_chars": 15000,
+      "max_items": 16,
+      "max_chars_per_item": 2800,
+      "min_chars_per_item": 220,
+      "reserved_source_classes": [
+        "repo_state",
+        "repo_instructions",
+        "user_message"
+      ],
+      "drop_order": [
+        "untrusted_external",
+        "session_memory",
+        "retrieved_web",
+        "tool_output",
+        "global_control",
+        "operator_contract",
+        "user_message",
+        "repo_state",
+        "repo_instructions"
+      ],
+      "source_class_char_limits": [
+        {
+          "source_class": "repo_state",
+          "max_chars": 2400
+        },
+        {
+          "source_class": "repo_instructions",
+          "max_chars": 2600
+        },
+        {
+          "source_class": "user_message",
+          "max_chars": 1800
+        },
+        {
+          "source_class": "operator_contract",
+          "max_chars": 2000
+        },
+        {
+          "source_class": "global_control",
+          "max_chars": 1600
+        },
+        {
+          "source_class": "tool_output",
+          "max_chars": 2200
+        },
+        {
+          "source_class": "session_memory",
+          "max_chars": 1000
+        },
+        {
+          "source_class": "retrieved_web",
+          "max_chars": 1800
+        },
+        {
+          "source_class": "untrusted_external",
+          "max_chars": 1000
+        }
+      ]
+    }
+  ]
+}

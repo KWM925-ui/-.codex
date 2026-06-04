@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "global_rules": {
+    "default_execution_mode": "compatibility_first",
+    "allow_hard_delete": false,
+    "allow_hot_path_physical_move": false,
+    "require_compatibility_entrypoints_when_callers_exist": true,
+    "preferred_reversible_action": "quarantine_or_trash"
+  },
+  "action_classes": [
+    {
+      "action": "preserve",
+      "description": "Keep authoritative in place; no cleanup or relocation in the current phase."
+    },
+    {
+      "action": "archive",
+      "description": "Move only to an explicit archive/evidence location with continuity preserved."
+    },
+    {
+      "action": "quarantine",
+      "description": "Use a reversible trash/quarantine flow before any destructive cleanup."
+    },
+    {
+      "action": "rotate",
+      "description": "Permit bounded retention rotation without breaking the authoritative lookup surface."
+    },
+    {
+      "action": "tool_only",
+      "description": "Changes must go through an owning tool or package-manager style workflow, not ad hoc file moves."
+    },
+    {
+      "action": "manual_review",
+      "description": "No execution without explicit operator review because the surface mixes evidence, state, or caller risk."
+    }
+  ],
+  "surface_policies": [
+    {
+      "selector_type": "core_category",
+      "selector": "global_map",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "core_category",
+      "selector": "home_summary",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "core_category",
+      "selector": "config_live",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "cache",
+      "allowed_actions": [
+        "preserve",
+        "quarantine",
+        "rotate",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "state",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "temp",
+      "allowed_actions": [
+        "preserve",
+        "quarantine",
+        "rotate",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "runtime_category",
+      "selector": "runtime_marker",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "sessions",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "sessions_archive",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "archived_sessions",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "index",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "memory",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "attachments",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "shell_snapshots",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "history_category",
+      "selector": "config_snapshot",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "productization_workspace",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "project_overlay",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "reference_bundle",
+      "allowed_actions": [
+        "preserve",
+        "archive",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "namespace_type",
+      "selector": "shared_asset_bundle",
+      "allowed_actions": [
+        "preserve",
+        "quarantine",
+        "tool_only",
+        "manual_review"
+      ]
+    }
+  ]
+}

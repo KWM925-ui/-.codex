@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "default_action_for_flagged": "downgrade_to_data",
+  "source_class_rules": [
+    {
+      "source_class": "tool_output",
+      "strip_instruction_authority": true,
+      "quoted_only": true
+    },
+    {
+      "source_class": "retrieved_web",
+      "strip_instruction_authority": true,
+      "quoted_only": true
+    },
+    {
+      "source_class": "untrusted_external",
+      "strip_instruction_authority": true,
+      "quoted_only": true
+    }
+  ],
+  "marker_categories": [
+    {
+      "id": "instruction_override",
+      "action": "downgrade_to_data",
+      "patterns": [
+        "(?i)\\bignore (all )?(previous|earlier) instructions\\b",
+        "(?i)\\bdisregard (all )?(previous|earlier) instructions\\b",
+        "(?i)\\boverride (the )?(system|developer) prompt\\b"
+      ]
+    },
+    {
+      "id": "credential_request",
+      "action": "flag",
+      "patterns": [
+        "(?i)\\b(api key|password|secret token|ssh private key)\\b"
+      ]
+    },
+    {
+      "id": "tool_escalation",
+      "action": "flag",
+      "patterns": [
+        "(?i)\\b(run|execute) (this|the following) command\\b",
+        "(?i)\\bcurl\\s+[^|]+\\|\\s*(sh|bash)\\b"
+      ]
+    },
+    {
+      "id": "exfiltration_request",
+      "action": "flag",
+      "patterns": [
+        "(?i)\\b(upload|send|exfiltrat\\w*)\\b.{0,40}\\b(files?|data|secrets?)\\b"
+      ]
+    },
+    {
+      "id": "hidden_payload",
+      "action": "flag",
+      "patterns": [
+        "(?i)<script\\b",
+        "(?i)begin prompt",
+        "(?i)base64,"
+      ]
+    }
+  ]
+}

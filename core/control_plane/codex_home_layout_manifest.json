@@ -1,0 +1,617 @@
+{
+  "schema_version": 1,
+  "layout_version": "portable-2026-06-04.phase1",
+  "home_root": "~/.codex",
+  "layers": [
+    {
+      "id": "core",
+      "path": "core",
+      "kind": "dir",
+      "must_not_be_symlink": true,
+      "role": "reusable global Codex assets"
+    },
+    {
+      "id": "runtime",
+      "path": "runtime",
+      "kind": "dir",
+      "must_not_be_symlink": true,
+      "role": "runtime cache, temp, and state mirrors"
+    },
+    {
+      "id": "history",
+      "path": "history",
+      "kind": "dir",
+      "must_not_be_symlink": true,
+      "role": "durable sessions, memories, and shell snapshots"
+    },
+    {
+      "id": "project_assets",
+      "path": "project_assets",
+      "kind": "dir",
+      "must_not_be_symlink": true,
+      "role": "project overlays, mirrors, and frozen evidence"
+    }
+  ],
+  "required_docs": [
+    "README.md",
+    "core/README.md",
+    "core/lifecycle_policy.md",
+    "core/core_surface_registry.json",
+    "runtime/README.md",
+    "runtime/lifecycle_policy.md",
+    "runtime/runtime_surface_registry.json",
+    "runtime/runtime_class_policy.json",
+    "history/README.md",
+    "history/lifecycle_policy.md",
+    "history/history_surface_registry.json",
+    "history/config_snapshot_policy.json",
+    "project_assets/README.md",
+    "project_assets/lifecycle_policy.md",
+    "project_assets/namespace_registry.json",
+    "project_assets/namespace_standards.json",
+    "project_assets/codex_home/README.md",
+    "project_assets/shared_imports/README.md",
+    "core/control_plane/README.md",
+    "core/control_plane/codex_home_governance.md",
+    "core/control_plane/codex_home_operations.md",
+    "core/control_plane/context_firewall.md",
+    "core/control_plane/codex_home_migration_candidates.json",
+    "core/control_plane/context_ingress_policy.json",
+    "core/control_plane/memory_admission_policy.json",
+    "core/control_plane/context_compaction_policy.json",
+    "core/control_plane/untrusted_content_policy.json",
+    "core/control_plane/codex_home_execution_modes.json",
+    "core/control_plane/codex_home_layout_manifest.json",
+    "core/control_plane/codex_home_lifecycle_operations.json",
+    "core/control_plane/codex_home_surface_index.json",
+    "core/rules/README.md"
+  ],
+  "required_scripts": [
+    "core/control_plane/scripts/audit_codex_home_layout.py",
+    "core/control_plane/scripts/explain_codex_home_policy.py",
+    "core/control_plane/scripts/doctor_codex_home_policy.py",
+    "core/control_plane/scripts/report_codex_home_policy.py",
+    "core/control_plane/scripts/review_runtime_reversible_targets.py",
+    "core/control_plane/scripts/review_tool_owned_targets.py",
+    "core/control_plane/scripts/review_archive_governed_targets.py",
+    "core/control_plane/scripts/review_lifecycle_candidates.py",
+    "core/control_plane/scripts/review_migration_candidates.py",
+    "core/control_plane/scripts/audit_context_firewall.py",
+    "core/control_plane/scripts/review_context_firewall.py",
+    "core/control_plane/scripts/probe_context_ingress.py",
+    "core/control_plane/scripts/compare_context_profiles.py",
+    "core/control_plane/scripts/evaluate_context_profiles.py",
+    "core/control_plane/scripts/suggest_curated_context.py",
+    "core/control_plane/scripts/build_curated_context.py",
+    "core/control_plane/scripts/agent_e2e_common.py",
+    "core/control_plane/scripts/agent_e2e_real_runner.py",
+    "core/control_plane/scripts/run_agent_e2e_evals.py",
+    "core/control_plane/scripts/run_codex_home_acceptance.py"
+  ],
+  "generated_contract_files": [
+    "core/control_plane/codex_home_surface_index.json",
+    "core/core_surface_registry.json",
+    "project_assets/namespace_registry.json",
+    "project_assets/namespace_standards.json",
+    "runtime/runtime_surface_registry.json",
+    "runtime/runtime_class_policy.json",
+    "history/history_surface_registry.json",
+    "history/config_snapshot_policy.json",
+    "core/control_plane/codex_home_migration_candidates.json",
+    "core/control_plane/context_ingress_policy.json",
+    "core/control_plane/memory_admission_policy.json",
+    "core/control_plane/context_compaction_policy.json",
+    "core/control_plane/untrusted_content_policy.json",
+    "core/control_plane/codex_home_lifecycle_operations.json",
+    "core/control_plane/codex_home_execution_modes.json"
+  ],
+  "core_surfaces": [
+    {
+      "root_path": "AGENTS.md",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "canonical_path": "AGENTS.md"
+    },
+    {
+      "root_path": "README.md",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "canonical_path": "README.md"
+    },
+    {
+      "root_path": "config.toml",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "canonical_path": "config.toml"
+    }
+  ],
+  "compatibility_surfaces": [
+    {
+      "path": "control_plane",
+      "expected_target": "core/control_plane",
+      "category": "core"
+    },
+    {
+      "path": "skills",
+      "expected_target": "core/skills",
+      "category": "core"
+    },
+    {
+      "path": "rules",
+      "expected_target": "core/rules",
+      "category": "core"
+    },
+    {
+      "path": "plugins",
+      "expected_target": "core/plugins",
+      "category": "core"
+    },
+    {
+      "path": "example_project_supervisor",
+      "expected_target": "project_assets/example_project/supervisor",
+      "category": "project_assets"
+    },
+    {
+      "path": "system_cleanup_supervisor",
+      "expected_target": "project_assets/system_cleanup/supervisor",
+      "category": "project_assets"
+    },
+    {
+      "path": "reference_mirror_example",
+      "expected_target": "project_assets/reference_mirrors/reference_mirror_example",
+      "category": "project_assets"
+    },
+    {
+      "path": "example_worktree_snapshots",
+      "expected_target": "project_assets/example_project/evidence/worktree_snapshots",
+      "category": "project_assets"
+    },
+    {
+      "path": "vendor_imports",
+      "expected_target": "project_assets/shared_imports/vendor_imports",
+      "category": "project_assets"
+    }
+  ],
+  "runtime_surfaces": [
+    {
+      "root_path": "cache",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/cache/codex_apps_cache",
+      "expected_mirror_target": "../../cache"
+    },
+    {
+      "root_path": "models_cache.json",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/cache/models_cache.json",
+      "expected_mirror_target": "../../models_cache.json"
+    },
+    {
+      "root_path": "auth.json",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/auth.json",
+      "expected_mirror_target": "../../auth.json"
+    },
+    {
+      "root_path": "installation_id",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/state/installation_id",
+      "expected_mirror_target": "../../installation_id"
+    },
+    {
+      "root_path": "logs_2.sqlite",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/state/logs_2.sqlite",
+      "expected_mirror_target": "../../logs_2.sqlite"
+    },
+    {
+      "root_path": "logs_2.sqlite-shm",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/logs_2.sqlite-shm",
+      "expected_mirror_target": "../../logs_2.sqlite-shm"
+    },
+    {
+      "root_path": "logs_2.sqlite-wal",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/logs_2.sqlite-wal",
+      "expected_mirror_target": "../../logs_2.sqlite-wal"
+    },
+    {
+      "root_path": "state_5.sqlite",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/state/state_5.sqlite",
+      "expected_mirror_target": "../../state_5.sqlite"
+    },
+    {
+      "root_path": "state_5.sqlite-shm",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/state_5.sqlite-shm",
+      "expected_mirror_target": "../../state_5.sqlite-shm"
+    },
+    {
+      "root_path": "state_5.sqlite-wal",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/state_5.sqlite-wal",
+      "expected_mirror_target": "../../state_5.sqlite-wal"
+    },
+    {
+      "root_path": "goals_1.sqlite",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/state/goals_1.sqlite",
+      "expected_mirror_target": "../../goals_1.sqlite"
+    },
+    {
+      "root_path": "goals_1.sqlite-shm",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/goals_1.sqlite-shm",
+      "expected_mirror_target": "../../goals_1.sqlite-shm"
+    },
+    {
+      "root_path": "goals_1.sqlite-wal",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/goals_1.sqlite-wal",
+      "expected_mirror_target": "../../goals_1.sqlite-wal"
+    },
+    {
+      "root_path": "memories_1.sqlite",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/state/memories_1.sqlite",
+      "expected_mirror_target": "../../memories_1.sqlite"
+    },
+    {
+      "root_path": "memories_1.sqlite-shm",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/memories_1.sqlite-shm",
+      "expected_mirror_target": "../../memories_1.sqlite-shm"
+    },
+    {
+      "root_path": "memories_1.sqlite-wal",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "required": false,
+      "mirror_path": "runtime/state/memories_1.sqlite-wal",
+      "expected_mirror_target": "../../memories_1.sqlite-wal"
+    },
+    {
+      "root_path": ".tmp",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/temp/dot_tmp",
+      "expected_mirror_target": "../../.tmp"
+    },
+    {
+      "root_path": "tmp",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "runtime/temp/tmp",
+      "expected_mirror_target": "../../tmp"
+    },
+    {
+      "root_path": ".personality_migration",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": ""
+    }
+  ],
+  "runtime_category_policy": [
+    {
+      "category": "cache",
+      "mirror_required": true,
+      "allow_optional_root": false,
+      "retention_class": "rebuildable_runtime_cache"
+    },
+    {
+      "category": "state",
+      "mirror_required": true,
+      "allow_optional_root": true,
+      "retention_class": "live_runtime_state"
+    },
+    {
+      "category": "temp",
+      "mirror_required": true,
+      "allow_optional_root": false,
+      "retention_class": "live_runtime_temp"
+    },
+    {
+      "category": "runtime_marker",
+      "mirror_required": false,
+      "allow_optional_root": false,
+      "retention_class": "root_only_runtime_marker"
+    }
+  ],
+  "history_surfaces": [
+    {
+      "root_path": "sessions",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/sessions",
+      "expected_mirror_target": "../sessions"
+    },
+    {
+      "root_path": "sessions_archive",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/sessions_archive",
+      "expected_mirror_target": "../sessions_archive"
+    },
+    {
+      "root_path": "archived_sessions",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/archived_sessions",
+      "expected_mirror_target": "../archived_sessions"
+    },
+    {
+      "root_path": "session_index.jsonl",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/session_index.jsonl",
+      "expected_mirror_target": "../session_index.jsonl"
+    },
+    {
+      "root_path": "memories",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/memories",
+      "expected_mirror_target": "../memories"
+    },
+    {
+      "root_path": "attachments",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/attachments",
+      "expected_mirror_target": "../attachments"
+    },
+    {
+      "root_path": "shell_snapshots",
+      "root_kind": "dir",
+      "root_must_not_be_symlink": true,
+      "mirror_path": "history/shell_snapshots",
+      "expected_mirror_target": "../shell_snapshots"
+    },
+    {
+      "root_path": "config.toml.example-snapshot",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": ""
+    }
+  ],
+  "history_snapshot_surfaces": [
+    {
+      "root_path": "config.toml.example-snapshot",
+      "snapshot_kind": "example_config_snapshot",
+      "retention_role": "historical configuration evidence",
+      "mirror_path": "",
+      "required": true
+    }
+  ],
+  "operations_policy": {
+    "global_rule_keys": [
+      "default_execution_mode",
+      "allow_hard_delete",
+      "allow_hot_path_physical_move",
+      "require_compatibility_entrypoints_when_callers_exist",
+      "preferred_reversible_action"
+    ],
+    "required_action_classes": [
+      "preserve",
+      "archive",
+      "quarantine",
+      "rotate",
+      "tool_only",
+      "manual_review"
+    ],
+    "required_selector_types": [
+      "core_category",
+      "runtime_category",
+      "history_category",
+      "namespace_type"
+    ]
+  },
+  "execution_mode_policy": {
+    "required_mode_classes": [
+      "preserve_only",
+      "reversible_only",
+      "archive_only",
+      "rotation_allowed",
+      "tool_only",
+      "manual_review_only"
+    ],
+    "required_selector_types": [
+      "core_category",
+      "runtime_category",
+      "history_category",
+      "namespace_type"
+    ]
+  },
+  "migration_candidates": [
+    {
+      "id": "reference_mirrors_example_phase1",
+      "selector_type": "namespace_type",
+      "selector": "reference_bundle",
+      "target": "project_assets/reference_mirrors",
+      "candidate_kind": "compatibility_preserving_namespace_archive_candidate",
+      "phase": "portable_phase1",
+      "scope_root": "project_assets/reference_mirrors/reference_mirror_example",
+      "compatibility_entrypoints": [
+        "reference_mirror_example"
+      ],
+      "protected_paths": [
+        "project_assets/reference_mirrors",
+        "project_assets/reference_mirrors/reference_mirror_example",
+        "reference_mirror_example"
+      ],
+      "preconditions": [
+        "No physical move of the authoritative reference mirror tree in the current phase.",
+        "The root compatibility entrypoint reference_mirror_example must continue to resolve to the namespace-owned example mirror tree.",
+        "Namespace registry, manifest, and migration candidate contract must stay version-aligned before any future move candidate is promoted.",
+        "Reference provenance and bundle identity must remain intact across any future archive handling."
+      ],
+      "planned_steps": [
+        "Treat project_assets/reference_mirrors/reference_mirror_example as the example namespace anchor for reference mirror bundles.",
+        "Preserve the root reference_mirror_example symlink unchanged as the required compatibility entrypoint for this sample contract.",
+        "Keep reference subtrees namespaced under the reference_mirrors root; do not flatten per-repository mirrors into new top-level paths.",
+        "If a later phase introduces deeper archive partitioning, update contracts and keep compatibility entrypoints resolving through a compatibility layer."
+      ],
+      "forbidden_actions": [
+        "No destructive cleanup of mirrored reference repositories.",
+        "No removal or repointing of the reference_mirror_example compatibility symlink in the current phase.",
+        "No in-place rewriting of mirrored reference repositories only to normalize layout.",
+        "No introduction of new root-level reference-mirror trees outside project_assets/reference_mirrors."
+      ],
+      "validation_commands": [
+        "python3 core/control_plane/scripts/audit_codex_home_layout.py --root \"$CODEX_HOME\"",
+        "python3 core/control_plane/scripts/review_archive_governed_targets.py --root \"$CODEX_HOME\""
+      ]
+    }
+  ],
+  "context_firewall_policy": {
+    "required_stages": [
+      "authority_filter",
+      "trust_filter",
+      "relevance_filter",
+      "freshness_filter",
+      "verbosity_filter"
+    ],
+    "required_source_classes": [
+      "repo_state",
+      "repo_instructions",
+      "user_message",
+      "operator_contract",
+      "global_control",
+      "tool_output",
+      "session_memory",
+      "retrieved_web",
+      "untrusted_external"
+    ],
+    "allowed_treatments": [
+      "authoritative_instruction",
+      "evidence",
+      "reference_only",
+      "untrusted_data"
+    ],
+    "allowed_freshness_policies": [
+      "stable",
+      "session_local",
+      "fresh_required",
+      "stale_allowed",
+      "freshness_scoped"
+    ],
+    "required_memory_kinds": [
+      "stable_preference",
+      "durable_workflow_rule",
+      "project_fact",
+      "volatile_task_state",
+      "external_claim"
+    ],
+    "allowed_memory_actions": [
+      "allow",
+      "review_only",
+      "deny"
+    ],
+    "forbidden_memory_kinds": [
+      "external_claim"
+    ],
+    "required_profiles": [
+      "strict",
+      "balanced",
+      "exploratory"
+    ],
+    "max_total_chars_upper_bound": 16000,
+    "required_untrusted_source_classes": [
+      "tool_output",
+      "retrieved_web",
+      "untrusted_external"
+    ],
+    "required_marker_categories": [
+      "instruction_override",
+      "credential_request",
+      "tool_escalation",
+      "exfiltration_request",
+      "hidden_payload"
+    ],
+    "allowed_handling_actions": [
+      "downgrade_to_data",
+      "flag",
+      "drop"
+    ]
+  },
+  "project_namespaces": [
+    {
+      "id": "codex_home",
+      "path": "project_assets/codex_home",
+      "role": "self-productization ledgers and supervisor packs for ~/.codex",
+      "required_paths": [
+        "project_assets/codex_home/supervisor"
+      ]
+    },
+    {
+      "id": "example_project",
+      "path": "project_assets/example_project",
+      "role": "example project overlay, case evidence, and frozen worktree evidence",
+      "required_paths": [
+        "project_assets/example_project/supervisor",
+        "project_assets/example_project/control_plane_cases",
+        "project_assets/example_project/evidence"
+      ]
+    },
+    {
+      "id": "system_cleanup",
+      "path": "project_assets/system_cleanup",
+      "role": "system-space audit overlay and ledgers",
+      "required_paths": [
+        "project_assets/system_cleanup/supervisor"
+      ]
+    },
+    {
+      "id": "reference_mirrors",
+      "path": "project_assets/reference_mirrors",
+      "role": "reference source mirrors that are not reusable core assets",
+      "required_paths": [
+        "project_assets/reference_mirrors/reference_mirror_example"
+      ]
+    },
+    {
+      "id": "shared_imports",
+      "path": "project_assets/shared_imports",
+      "role": "shared imported bundles that are not reusable core assets",
+      "required_paths": [
+        "project_assets/shared_imports/vendor_imports"
+      ]
+    }
+  ],
+  "config_expectations": {
+    "forbidden_exact_project_keys": [
+      "/"
+    ],
+    "forbidden_project_key_prefixes": [
+      "/tmp/"
+    ]
+  },
+  "rule_surface": {
+    "path": "core/rules/default.rules",
+    "allow_empty": true
+  }
+}

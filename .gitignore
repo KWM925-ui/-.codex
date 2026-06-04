@@ -1,0 +1,46 @@
+# Local Codex runtime/config
+config.toml
+auth.json
+installation_id
+models_cache.json
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.jsonl
+*.log
+
+# Runtime, cache, history, and private project assets
+/runtime/
+/history/
+/project_assets/
+/sessions/
+/sessions_archive/
+/archived_sessions/
+/session_index.jsonl
+/memories/
+/attachments/
+/shell_snapshots/
+/cache/
+/tmp/
+/.tmp/
+
+# Local compatibility symlinks or private overlays
+/control_plane
+/skills
+/rules
+/plugins
+/project_*_supervisor
+/system_cleanup_supervisor
+/reference_mirror_*
+/example_worktree_snapshots
+
+# Python/test residue
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# OS/editor residue
+.DS_Store
+*~

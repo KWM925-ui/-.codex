@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "root_surfaces": [
+    {
+      "path": ".personality_migration",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_marker",
+      "notes": "Local runtime/personality migration marker."
+    },
+    {
+      "path": ".tmp",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "temp_runtime",
+      "notes": "Hot temporary/runtime surface mirrored from runtime/temp/dot_tmp."
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "file",
+      "layer": "core",
+      "status": "authoritative_root",
+      "category": "global_map",
+      "notes": "Machine-wide instruction map."
+    },
+    {
+      "path": "README.md",
+      "kind": "file",
+      "layer": "core",
+      "status": "authoritative_root",
+      "category": "home_summary",
+      "notes": "Human-readable top-level layout summary."
+    },
+    {
+      "path": "archived_sessions",
+      "kind": "dir",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_archive",
+      "notes": "Legacy archived session storage mirrored from history/archived_sessions."
+    },
+    {
+      "path": "attachments",
+      "kind": "dir",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_attachments",
+      "notes": "Uploaded attachment evidence and pasted-text metadata mirrored from history/attachments."
+    },
+    {
+      "path": "cache",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "cache_runtime",
+      "notes": "Hot cache surface mirrored from runtime/cache/codex_apps_cache."
+    },
+    {
+      "path": "config.toml",
+      "kind": "file",
+      "layer": "core",
+      "status": "authoritative_root",
+      "category": "config_live",
+      "notes": "Active Codex configuration."
+    },
+    {
+      "path": "config.toml.example-snapshot",
+      "kind": "file",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "config_snapshot",
+      "notes": "Historical config snapshot preserved as evidence."
+    },
+    {
+      "path": "control_plane",
+      "kind": "symlink",
+      "layer": "core",
+      "status": "compatibility_symlink",
+      "category": "core_entrypoint",
+      "notes": "Compatibility entrypoint to core/control_plane."
+    },
+    {
+      "path": "core",
+      "kind": "dir",
+      "layer": "core",
+      "status": "canonical_layer",
+      "category": "layer_root",
+      "notes": "Reusable global Codex assets."
+    },
+    {
+      "path": "history",
+      "kind": "dir",
+      "layer": "history",
+      "status": "canonical_layer",
+      "category": "layer_root",
+      "notes": "History mirrors and audit surfaces."
+    },
+    {
+      "path": "installation_id",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime state mirrored from runtime/state/installation_id."
+    },
+    {
+      "path": "logs_2.sqlite",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime database mirrored from runtime/state/logs_2.sqlite."
+    },
+    {
+      "path": "logs_2.sqlite-shm",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime database sidecar mirrored from runtime/state/logs_2.sqlite-shm."
+    },
+    {
+      "path": "logs_2.sqlite-wal",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime database sidecar mirrored from runtime/state/logs_2.sqlite-wal."
+    },
+    {
+      "path": "memories",
+      "kind": "dir",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_memory",
+      "notes": "Generated memory store mirrored from history/memories."
+    },
+    {
+      "path": "memories_1.sqlite",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot memory runtime database surface currently owned by Codex runtime."
+    },
+    {
+      "path": "memories_1.sqlite-shm",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot memory runtime database sidecar currently owned by Codex runtime."
+    },
+    {
+      "path": "memories_1.sqlite-wal",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot memory runtime database sidecar currently owned by Codex runtime."
+    },
+    {
+      "path": "models_cache.json",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "cache_runtime",
+      "notes": "Runtime model cache mirrored from runtime/cache/models_cache.json."
+    },
+    {
+      "path": "goals_1.sqlite",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot goal/runtime database surface currently owned by Codex runtime."
+    },
+    {
+      "path": "goals_1.sqlite-shm",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot goal/runtime database sidecar currently owned by Codex runtime."
+    },
+    {
+      "path": "goals_1.sqlite-wal",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot goal/runtime database sidecar currently owned by Codex runtime."
+    },
+    {
+      "path": "example_project_supervisor",
+      "kind": "symlink",
+      "layer": "project_assets",
+      "status": "compatibility_symlink",
+      "category": "project_entrypoint",
+      "notes": "Compatibility entrypoint to project_assets/example_project/supervisor."
+    },
+    {
+      "path": "plugins",
+      "kind": "symlink",
+      "layer": "core",
+      "status": "compatibility_symlink",
+      "category": "core_entrypoint",
+      "notes": "Compatibility entrypoint to core/plugins."
+    },
+    {
+      "path": "project_assets",
+      "kind": "dir",
+      "layer": "project_assets",
+      "status": "canonical_layer",
+      "category": "layer_root",
+      "notes": "Project-specific overlays, mirrors, and frozen evidence."
+    },
+    {
+      "path": "rules",
+      "kind": "symlink",
+      "layer": "core",
+      "status": "compatibility_symlink",
+      "category": "core_entrypoint",
+      "notes": "Compatibility entrypoint to core/rules."
+    },
+    {
+      "path": "runtime",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "canonical_layer",
+      "category": "layer_root",
+      "notes": "Runtime mirror taxonomy."
+    },
+    {
+      "path": "session_index.jsonl",
+      "kind": "file",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_index",
+      "notes": "Session index surface mirrored from history/session_index.jsonl."
+    },
+    {
+      "path": "sessions",
+      "kind": "dir",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_session",
+      "notes": "Live session history mirrored from history/sessions."
+    },
+    {
+      "path": "sessions_archive",
+      "kind": "dir",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_archive",
+      "notes": "Session archive mirrored from history/sessions_archive."
+    },
+    {
+      "path": "shell_snapshots",
+      "kind": "dir",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_shell",
+      "notes": "Shell snapshot store mirrored from history/shell_snapshots."
+    },
+    {
+      "path": "skills",
+      "kind": "symlink",
+      "layer": "core",
+      "status": "compatibility_symlink",
+      "category": "core_entrypoint",
+      "notes": "Compatibility entrypoint to core/skills."
+    },
+    {
+      "path": "state_5.sqlite",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime database mirrored from runtime/state/state_5.sqlite."
+    },
+    {
+      "path": "state_5.sqlite-shm",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime database sidecar mirrored from runtime/state/state_5.sqlite-shm."
+    },
+    {
+      "path": "state_5.sqlite-wal",
+      "kind": "file",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "runtime_state",
+      "notes": "Hot runtime database sidecar mirrored from runtime/state/state_5.sqlite-wal."
+    },
+    {
+      "path": "system_cleanup_supervisor",
+      "kind": "symlink",
+      "layer": "project_assets",
+      "status": "compatibility_symlink",
+      "category": "project_entrypoint",
+      "notes": "Compatibility entrypoint to project_assets/system_cleanup/supervisor."
+    },
+    {
+      "path": "tmp",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "authoritative_root",
+      "category": "temp_runtime",
+      "notes": "Hot temporary/runtime surface mirrored from runtime/temp/tmp."
+    },
+    {
+      "path": "reference_mirror_example",
+      "kind": "symlink",
+      "layer": "project_assets",
+      "status": "compatibility_symlink",
+      "category": "project_entrypoint",
+      "notes": "Compatibility entrypoint to project_assets/reference_mirrors/reference_mirror_example."
+    },
+    {
+      "path": "vendor_imports",
+      "kind": "symlink",
+      "layer": "project_assets",
+      "status": "compatibility_symlink",
+      "category": "project_entrypoint",
+      "notes": "Compatibility entrypoint to project_assets/shared_imports/vendor_imports."
+    },
+    {
+      "path": "example_worktree_snapshots",
+      "kind": "symlink",
+      "layer": "project_assets",
+      "status": "compatibility_symlink",
+      "category": "project_entrypoint",
+      "notes": "Compatibility entrypoint to project_assets/example_project/evidence/worktree_snapshots."
+    }
+  ]
+}

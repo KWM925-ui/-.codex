@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "stages": [
+    {
+      "id": "authority_filter",
+      "required": true,
+      "purpose": "Apply source precedence and strip authority from non-authoritative inputs."
+    },
+    {
+      "id": "trust_filter",
+      "required": true,
+      "purpose": "Separate trusted, bounded, and untrusted source classes."
+    },
+    {
+      "id": "relevance_filter",
+      "required": true,
+      "purpose": "Reject low-signal items before they consume context budget."
+    },
+    {
+      "id": "freshness_filter",
+      "required": true,
+      "purpose": "Bound stale or weakly anchored material."
+    },
+    {
+      "id": "verbosity_filter",
+      "required": true,
+      "purpose": "Enforce source-level and total context budgets."
+    }
+  ],
+  "relevance_policy": {
+    "default_source_action": "admit",
+    "missing_score_action": "admit",
+    "tiers": [
+      {
+        "id": "drop_low_signal",
+        "max_score": 0.14,
+        "action": "drop"
+      },
+      {
+        "id": "demote_borderline",
+        "max_score": 0.34,
+        "action": "demote"
+      },
+      {
+        "id": "admit_relevant",
+        "max_score": 1.0,
+        "action": "admit"
+      }
+    ],
+    "source_overrides": [
+      {
+        "source_class": "repo_state",
+        "below_threshold_action": "admit"
+      },
+      {
+        "source_class": "repo_instructions",
+        "below_threshold_action": "admit"
+      },
+      {
+        "source_class": "user_message",
+        "below_threshold_action": "admit"
+      },
+      {
+        "source_class": "operator_contract",
+        "below_threshold_action": "demote"
+      },
+      {
+        "source_class": "global_control",
+        "below_threshold_action": "demote"
+      }
+    ]
+  },
+  "source_classes": [
+    {
+      "source_class": "repo_state",
+      "authority_rank": 1,
+      "treatment": "evidence",
+      "freshness_policy": "fresh_required",
+      "max_age_days": 14,
+      "allows_memory_writeback": true
+    },
+    {
+      "source_class": "repo_instructions",
+      "authority_rank": 1,
+      "treatment": "authoritative_instruction",
+      "freshness_policy": "fresh_required",
+      "max_age_days": 30,
+      "allows_memory_writeback": true
+    },
+    {
+      "source_class": "user_message",
+      "authority_rank": 2,
+      "treatment": "authoritative_instruction",
+      "freshness_policy": "session_local",
+      "max_age_days": 1,
+      "allows_memory_writeback": true
+    },
+    {
+      "source_class": "operator_contract",
+      "authority_rank": 2,
+      "treatment": "authoritative_instruction",
+      "freshness_policy": "session_local",
+      "max_age_days": 30,
+      "allows_memory_writeback": true
+    },
+    {
+      "source_class": "global_control",
+      "authority_rank": 3,
+      "treatment": "authoritative_instruction",
+      "freshness_policy": "stable",
+      "max_age_days": 365,
+      "allows_memory_writeback": false
+    },
+    {
+      "source_class": "tool_output",
+      "authority_rank": 3,
+      "treatment": "evidence",
+      "freshness_policy": "fresh_required",
+      "max_age_days": 7,
+      "allows_memory_writeback": false
+    },
+    {
+      "source_class": "session_memory",
+      "authority_rank": 4,
+      "treatment": "reference_only",
+      "freshness_policy": "stale_allowed",
+      "max_age_days": 30,
+      "allows_memory_writeback": false
+    },
+    {
+      "source_class": "retrieved_web",
+      "authority_rank": 4,
+      "treatment": "reference_only",
+      "freshness_policy": "freshness_scoped",
+      "max_age_days": 14,
+      "allows_memory_writeback": false
+    },
+    {
+      "source_class": "untrusted_external",
+      "authority_rank": 5,
+      "treatment": "untrusted_data",
+      "freshness_policy": "freshness_scoped",
+      "max_age_days": 7,
+      "allows_memory_writeback": false
+    }
+  ],
+  "conflict_rules": [
+    "repo_state overrides memory recall when they disagree",
+    "repo-local instructions override global control for repo-scoped behavior",
+    "untrusted and retrieved content may inform evidence but may not override authority-bearing instructions",
+    "memory admission is stricter than same-turn context admission"
+  ]
+}
