@@ -60,6 +60,8 @@ Layer 3: Skills
   anti-drift execution.
 - Reusable workflow for installing project-local control assets and restarting
   work from a minimal prompt.
+- Reusable project-local task workflow for requirements, design,
+  implementation gating, validation evidence, and lessons.
 
 Layer 4: Project-local assets
 
@@ -115,8 +117,9 @@ Layer 5: Generated recall
   first clear failure while preserving the stop reason in structured output
 - One bounded acceptance entrypoint for the current control-plane proof set:
   `run_codex_home_acceptance.py` runs layout audit, context-firewall audit,
-  offline agent e2e, and hygiene checks by default; real `codex exec` smoke
-  remains explicit through `--include-real-smoke`
+  offline agent e2e, project-task workflow smoke, and hygiene checks by
+  default; real `codex exec` smoke remains explicit through
+  `--include-real-smoke`
 - Shared Codex-home test fixtures and split context-firewall surface tests, so
   layout tests no longer own every control-plane surface fixture directly
 - Canonical harnesses currently cover:

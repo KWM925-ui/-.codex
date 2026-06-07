@@ -4,6 +4,7 @@ This repository contains the reusable part of a Codex control system:
 
 - global instruction map in `AGENTS.md`
 - control-plane policies, audits, and evaluation scripts under `core/control_plane`
+- lightweight project-local task workflow under `core/control_plane/scripts/project_task_workflow.py`
 - reusable skills under `core/skills`
 - empty global rules surface under `core/rules/default.rules`
 
@@ -31,6 +32,7 @@ Run the deterministic checks after install:
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -B core/control_plane/scripts/audit_context_firewall.py --root "$CODEX_HOME" --json
 PYTHONDONTWRITEBYTECODE=1 python3 -B core/control_plane/scripts/run_agent_e2e_evals.py --root "$CODEX_HOME" --json
+PYTHONDONTWRITEBYTECODE=1 python3 -B core/control_plane/scripts/run_codex_home_acceptance.py --root "$CODEX_HOME" --json
 ```
 
 The full layout audit expects a materialized Codex home with runtime/history
@@ -52,3 +54,16 @@ Do not commit:
 
 The public repository should stay generic: project-specific rules belong in the
 project repo or a private project overlay.
+
+## Project Task Workflow
+
+Use the task workflow only inside a target repository, not in the global home
+by default:
+
+```bash
+python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+  create "Clarify and implement feature" --project-root /path/to/repo --json
+```
+
+Creating a task records planning state only. Implementation still requires the
+separate `start --confirm-plan-reviewed` step.

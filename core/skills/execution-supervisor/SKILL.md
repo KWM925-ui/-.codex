@@ -15,6 +15,12 @@ Typical triggers:
 - supervising another Codex session
 - situations where wasted runs or patch sprawl are costly
 
+If the repository has a project-local task pack under `.codex/tasks/`, read the
+active task state first. The task pack owns requirements, design,
+implementation plan, context manifests, and lessons. The supervisor ledger owns
+debugging frontier, exclusions, promotion gates, and high-risk validation
+control. Do not collapse those two roles into one document.
+
 ## Core Workflow
 
 1. If a supervisor pack does not exist yet, scaffold one with:

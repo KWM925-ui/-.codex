@@ -41,6 +41,17 @@ Before changing code or running formal validation, map:
 
 Use a simple bounded workflow when the task is small and local.
 
+Use the project task workflow when the missing layer is task lifecycle rather
+than repository-wide bootstrap:
+
+```bash
+python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+  create "Task title" --project-root /path/to/repo --json
+```
+
+Creating a task records planning state only. Starting implementation still
+requires `start --confirm-plan-reviewed`.
+
 Use `execution-supervisor` when the task is:
 
 - acceptance-style

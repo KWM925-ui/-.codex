@@ -36,6 +36,8 @@ clear project-local control surfaces.
    - dirty-tree boundary
    - generated artifacts vs real edits
 2. Decide whether the task needs only a small local workflow or supervisor mode.
+   Use the project task workflow when the missing layer is task lifecycle rather
+   than repository-wide bootstrap.
 3. If repo-local control assets are missing and the work will last:
    - create or tighten repository `AGENTS.md`
    - create or tighten a plan/ledger if continuity is required
@@ -51,6 +53,11 @@ Use these when scaffolding project-local assets:
 
 - `$CODEX_HOME/core/control_plane/templates/repo_AGENTS.template.md`
 - `$CODEX_HOME/core/control_plane/templates/PLANS.template.md`
+- `$CODEX_HOME/core/control_plane/templates/project_task_pack/`
+
+Task workflow command:
+
+- `$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py`
 
 ## Output Standard
 

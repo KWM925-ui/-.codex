@@ -6,13 +6,15 @@ import json
 import os
 import subprocess
 import sys
+import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 DEFAULT_ROOT = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")).expanduser()
 SCRIPT_DIR = Path(__file__).resolve().parent
+SAFE_REAL_AUTH_ENV_VARS = ["OPENAI_API_KEY"]
 
 
 @dataclass
@@ -80,9 +82,15 @@ def _python_command(script_name: str, root: Path, *extra: str) -> List[str]:
     ]
 
 
-def _run_command(name: str, command: List[str]) -> StepResult:
+def _run_command(
+    name: str,
+    command: List[str],
+    extra_env: Optional[Dict[str, str]] = None,
+) -> StepResult:
     env = os.environ.copy()
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    if extra_env:
+        env.update(extra_env)
     completed = subprocess.run(
         command,
         check=False,
@@ -102,6 +110,33 @@ def _run_command(name: str, command: List[str]) -> StepResult:
         details={
             "stdout_tail": output[-1200:],
             "stderr_tail": error[-1200:],
+        },
+    )
+
+
+def _check_real_auth_preflight(env: Dict[str, str]) -> StepResult:
+    present = [
+        name
+        for name in SAFE_REAL_AUTH_ENV_VARS
+        if env.get(name, "").strip()
+    ]
+    ok = bool(present)
+    if ok:
+        summary = "通过，发现安全外部认证变量：%s" % ", ".join(present)
+    else:
+        summary = (
+            "阻塞，未发现安全外部认证变量；不会复制 live config/auth/token/key"
+        )
+    return StepResult(
+        name="real_auth_preflight",
+        ok=ok,
+        summary=summary,
+        details={
+            "safe_auth_env_candidates": SAFE_REAL_AUTH_ENV_VARS,
+            "present_auth_env_vars": present,
+            "copied_live_config": False,
+            "copied_live_auth": False,
+            "blocked_without_model_call": not ok,
         },
     )
 
@@ -143,48 +178,86 @@ def _summarize_command_output(
             current.get("passed"),
             current.get("tasks"),
         )
+    if name == "project_task_workflow_smoke":
+        return "通过，项目本地任务工作流 smoke 通过"
     if name.startswith("real_"):
         evals = payload.get("evals", [])
+        wanted_id = {
+            "real_patch_smoke": "real_model_ab",
+            "real_noop_smoke": "real_noop_boundary",
+            "real_ambiguous_smoke": "real_ambiguous_boundary",
+        }.get(name, "real_model_ab")
         real_eval = next(
             (
                 item
                 for item in evals
-                if item.get("name") in {"real_model_ab", "real_noop_boundary"}
+                if item.get("id") == wanted_id
             ),
             {},
         )
-        summary = real_eval.get("summary", {})
-        return "通过，真实 smoke failures=%s safety_blocks=%s" % (
-            summary.get("failures", 0),
-            summary.get("provider_safety_blocks", 0),
+        return "通过，真实 smoke trials=%s failures=%s safety_blocks=%s" % (
+            real_eval.get("trial_count", 0),
+            len(real_eval.get("failures", [])),
+            real_eval.get("provider_safety_blocks", 0),
         )
     return "通过"
 
 
-def _check_hygiene(root: Path) -> StepResult:
+def _current_temporary_eval_dirs() -> List[str]:
+    tmp_dirs = []
+    tmp_root = Path("/tmp")
+    for pattern in ("codex-agent-e2e-*", "codex-runner-probe-*"):
+        tmp_dirs.extend(sorted(path.as_posix() for path in tmp_root.glob(pattern)))
+    return sorted(tmp_dirs)
+
+
+def _owned_temporary_eval_dirs(
+    tmp_dirs: List[str],
+    temp_owner_id: Optional[str],
+) -> List[str]:
+    if not temp_owner_id:
+        return tmp_dirs
+    owner_markers = [
+        "/codex-agent-e2e-%s-" % temp_owner_id,
+        "/codex-runner-probe-%s-" % temp_owner_id,
+    ]
+    return sorted(
+        path for path in tmp_dirs if any(marker in path for marker in owner_markers)
+    )
+
+
+def _check_hygiene(root: Path, temp_owner_id: Optional[str] = None) -> StepResult:
     bytecode_paths = sorted(
         path.relative_to(root).as_posix()
         for path in (root / "core/control_plane").rglob("*")
         if path.name == "__pycache__" or path.suffix == ".pyc"
     )
-    tmp_dirs = []
-    tmp_root = Path("/tmp")
-    for pattern in ("codex-agent-e2e-*", "codex-runner-probe-*"):
-        tmp_dirs.extend(sorted(path.as_posix() for path in tmp_root.glob(pattern)))
+    observed_tmp_dirs = _current_temporary_eval_dirs()
+    blocking_tmp_dirs = _owned_temporary_eval_dirs(observed_tmp_dirs, temp_owner_id)
+    nonblocking_tmp_dirs = sorted(set(observed_tmp_dirs) - set(blocking_tmp_dirs))
 
     temp_trusted = _temporary_trusted_project_keys(root)
-    ok = not bytecode_paths and not tmp_dirs and not temp_trusted
+    ok = not bytecode_paths and not blocking_tmp_dirs and not temp_trusted
     details = {
         "bytecode_paths": bytecode_paths,
-        "temporary_eval_dirs": tmp_dirs,
+        "temporary_eval_dirs": blocking_tmp_dirs,
+        "other_temporary_eval_dirs": nonblocking_tmp_dirs,
+        "temporary_eval_dirs_observed": observed_tmp_dirs,
+        "temp_owner_id": temp_owner_id or "",
         "temporary_trusted_projects": temp_trusted,
     }
     if ok:
-        summary = "通过，没有 bytecode、评测临时目录、临时 trusted project 残留"
+        if nonblocking_tmp_dirs:
+            summary = (
+                "通过，没有本次验收残留；检测到其他并发评测临时目录 %d 个，已单独列出"
+                % len(nonblocking_tmp_dirs)
+            )
+        else:
+            summary = "通过，没有 bytecode、本次评测临时目录、临时 trusted project 残留"
     else:
-        summary = "发现残留：bytecode=%d tmp_dirs=%d trusted_projects=%d" % (
+        summary = "发现本次残留：bytecode=%d tmp_dirs=%d trusted_projects=%d" % (
             len(bytecode_paths),
-            len(tmp_dirs),
+            len(blocking_tmp_dirs),
             len(temp_trusted),
         )
     return StepResult(
@@ -236,6 +309,18 @@ def _planned_commands(
             command=_python_command("run_agent_e2e_evals.py", root, "--json"),
             summary="离线端到端评测",
         ),
+        StepResult(
+            name="project_task_workflow_smoke",
+            ok=True,
+            command=[
+                sys.executable,
+                "-B",
+                "-m",
+                "unittest",
+                str(SCRIPT_DIR.parent / "tests/test_project_task_workflow.py"),
+            ],
+            summary="项目本地任务工作流 smoke",
+        ),
     ]
     if include_real_smoke:
         real_common = [
@@ -251,6 +336,11 @@ def _planned_commands(
         ]
         steps.extend(
             [
+                StepResult(
+                    name="real_auth_preflight",
+                    ok=True,
+                    summary="真实 smoke 安全认证预检",
+                ),
                 StepResult(
                     name="real_patch_smoke",
                     ok=True,
@@ -275,6 +365,18 @@ def _planned_commands(
                     ),
                     summary="真实 no-op smoke",
                 ),
+                StepResult(
+                    name="real_ambiguous_smoke",
+                    ok=True,
+                    command=_python_command(
+                        "run_agent_e2e_evals.py",
+                        root,
+                        "--real-preset",
+                        "ambiguous-smoke",
+                        *real_common,
+                    ),
+                    summary="真实模糊需求 smoke",
+                ),
             ]
         )
     return steps
@@ -282,6 +384,7 @@ def _planned_commands(
 
 def _run_acceptance(args: argparse.Namespace) -> Dict[str, object]:
     root = Path(args.root).resolve()
+    temp_owner_id = "acceptance-%s" % uuid.uuid4().hex[:12]
     planned = _planned_commands(
         root,
         args.include_real_smoke,
@@ -299,13 +402,21 @@ def _run_acceptance(args: argparse.Namespace) -> Dict[str, object]:
 
     results: List[StepResult] = []
     for step in planned:
-        result = _run_command(step.name, step.command)
+        if step.name == "real_auth_preflight":
+            result = _check_real_auth_preflight(os.environ)
+        else:
+            result = _run_command(
+                step.name,
+                step.command,
+                {"CODEX_AGENT_E2E_OWNER_ID": temp_owner_id}
+                if step.name == "agent_e2e_offline" or step.name.startswith("real_")
+                else None,
+            )
         results.append(result)
         if not result.ok:
             break
 
-    if all(result.ok for result in results):
-        results.append(_check_hygiene(root))
+    results.append(_check_hygiene(root, temp_owner_id))
 
     ok = bool(results) and all(result.ok for result in results)
     return {
