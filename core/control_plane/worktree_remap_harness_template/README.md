@@ -12,7 +12,7 @@ the basic auto-advance harness:
 Materialize a fresh case with:
 
 ```bash
-$CODEX_HOME/core/control_plane/scripts/materialize_worktree_remap_harness.sh /tmp/my_remap_case
+/home/example/.codex/control_plane/scripts/materialize_worktree_remap_harness.sh /tmp/my_remap_case
 ```
 
 Run one regression manually with:
@@ -24,5 +24,5 @@ codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral --color never 
 Or run the batch regression:
 
 ```bash
-$CODEX_HOME/core/control_plane/scripts/run_worktree_remap_regression.sh 3
+/home/example/.codex/control_plane/scripts/run_worktree_remap_regression.sh 3
 ```

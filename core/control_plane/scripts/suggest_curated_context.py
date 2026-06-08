@@ -7,7 +7,10 @@ from pathlib import Path
 from typing import Any, Dict
 
 from context_firewall_lib import DEFAULT_ROOT, curate_context, load_json
-from curated_context_redaction import redacted_curated_payload
+from curated_context_redaction import (
+    print_redacted_curated_text,
+    redacted_curated_payload,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -21,7 +24,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--root",
         default=str(DEFAULT_ROOT),
-        help="Codex home root. Defaults to CODEX_HOME or ~/.codex.",
+        help="Codex home root. Defaults to /home/example/.codex.",
     )
     parser.add_argument(
         "--input",
@@ -56,36 +59,6 @@ def build_curated_context_suggestion(
     )
 
 
-def _print_text(payload: Dict[str, Any]) -> None:
-    print("layout_version: %s" % payload["layout_version"])
-    print("budget_profile: %s" % payload["budget_profile"])
-    print("privacy: %s" % json.dumps(payload["privacy"], ensure_ascii=False, sort_keys=True))
-    print("summary: %s" % json.dumps(payload["summary"], ensure_ascii=False, sort_keys=True))
-    print("")
-    print("curated_items:")
-    for item in payload["curated_items"]:
-        print(
-            "- %s | %s | action=%s | treatment=%s | chars=%s/%s | flags=%s"
-            % (
-                item["id"],
-                item["source_class"],
-                item["relevance_action"],
-                item["treatment"],
-                item["kept_chars"],
-                item["input_chars"],
-                ",".join(item["flags"]) if item["flags"] else "(none)",
-            )
-        )
-    print("")
-    print("review_items:")
-    for item in payload["review_items"]:
-        print("- %s | %s | %s" % (item["id"], item["source_class"], item["reason"]))
-    print("")
-    print("rejected_items:")
-    for item in payload["rejected_items"]:
-        print("- %s | %s | %s" % (item.get("id"), item.get("source_class"), item.get("reason")))
-
-
 def main() -> int:
     parser = _build_parser()
     args = parser.parse_args()
@@ -104,7 +77,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
-    _print_text(result)
+    print_redacted_curated_text(result)
     return 0
 
 

@@ -26,7 +26,7 @@ control. Do not collapse those two roles into one document.
 1. If a supervisor pack does not exist yet, scaffold one with:
 
 ```bash
-python "$CODEX_HOME/core/skills/execution-supervisor/scripts/init_supervisor_pack.py" \
+python /home/example/.codex/skills/execution-supervisor/scripts/init_supervisor_pack.py \
   --root <pack_dir> \
   --project <project_name> \
   --workspace <workspace_path> \

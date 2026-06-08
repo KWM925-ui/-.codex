@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Shared redaction helpers for report-only context-firewall tools."""
 
+import json
 from typing import Any, Dict, List, Optional
 
 
@@ -102,3 +103,43 @@ def redacted_curated_payload(
         "review_items": redacted["review_items"],
         "rejected_items": redacted["rejected_items"],
     }
+
+
+def print_redacted_curated_text(payload: Dict[str, Any]) -> None:
+    """Print redacted curation metadata in one shared human-readable format."""
+    print("layout_version: %s" % payload["layout_version"])
+    print("budget_profile: %s" % payload["budget_profile"])
+    print(
+        "privacy: %s"
+        % json.dumps(payload["privacy"], ensure_ascii=False, sort_keys=True)
+    )
+    print(
+        "summary: %s"
+        % json.dumps(payload["summary"], ensure_ascii=False, sort_keys=True)
+    )
+    print("")
+    print("curated_items:")
+    for item in payload["curated_items"]:
+        print(
+            "- %s | %s | action=%s | treatment=%s | chars=%s/%s | flags=%s"
+            % (
+                item["id"],
+                item["source_class"],
+                item["relevance_action"],
+                item["treatment"],
+                item["kept_chars"],
+                item.get("input_chars"),
+                ",".join(item["flags"]) if item["flags"] else "(none)",
+            )
+        )
+    print("")
+    print("review_items:")
+    for item in payload["review_items"]:
+        print("- %s | %s | %s" % (item["id"], item["source_class"], item["reason"]))
+    print("")
+    print("rejected_items:")
+    for item in payload["rejected_items"]:
+        print(
+            "- %s | %s | %s"
+            % (item.get("id"), item.get("source_class"), item.get("reason"))
+        )

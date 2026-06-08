@@ -19,7 +19,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--root",
         default=str(DEFAULT_ROOT),
-        help="Codex home root. Defaults to CODEX_HOME or ~/.codex.",
+        help="Codex home root. Defaults to /home/example/.codex.",
     )
     parser.add_argument("--json", action="store_true", help="Emit structured JSON.")
     return parser

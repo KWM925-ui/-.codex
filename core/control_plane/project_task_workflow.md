@@ -10,7 +10,7 @@ Purpose:
 Canonical command:
 
 ```bash
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py"
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py
 ```
 
 ## Storage Model
@@ -71,14 +71,14 @@ User consent to create a task does not imply user consent to start implementatio
 Create planning state:
 
 ```bash
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py \
   create "Add login flow" --project-root /path/to/repo --json
 ```
 
 Add stable context:
 
 ```bash
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py \
   add-context 20260608-add-login-flow implement docs/auth.md \
   "Authentication design constraints" --project-root /path/to/repo --json
 ```
@@ -86,7 +86,7 @@ python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
 Start only after plan review:
 
 ```bash
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py \
   start 20260608-add-login-flow --confirm-plan-reviewed \
   --project-root /path/to/repo --json
 ```
@@ -94,18 +94,18 @@ python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
 Validate project task packs:
 
 ```bash
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py \
   validate --project-root /path/to/repo --json
 ```
 
 Complete with evidence, then archive:
 
 ```bash
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py \
   complete 20260608-add-login-flow --evidence "pytest passed" \
   --project-root /path/to/repo --json
 
-python3 "$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py" \
+python3 /home/example/.codex/core/control_plane/scripts/project_task_workflow.py \
   archive 20260608-add-login-flow --project-root /path/to/repo --json
 ```
 

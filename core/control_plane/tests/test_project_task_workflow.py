@@ -9,8 +9,7 @@ from pathlib import Path
 
 os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
 
-THIS_DIR = Path(__file__).resolve().parent
-SCRIPT = THIS_DIR.parent / "scripts/project_task_workflow.py"
+SCRIPT = Path(__file__).resolve().parent.parent / "scripts/project_task_workflow.py"
 
 
 class ProjectTaskWorkflowTests(unittest.TestCase):

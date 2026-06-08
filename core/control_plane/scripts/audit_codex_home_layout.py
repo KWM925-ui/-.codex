@@ -11,8 +11,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from context_firewall_lib import validate_context_firewall_contracts
 
-DEFAULT_ROOT = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")).expanduser()
-
 
 def _load_toml(text: str) -> Dict[str, Any]:
     try:
@@ -1461,14 +1459,28 @@ def _audit_config(config_path: Path, expectations: Dict[str, Any]) -> List[Check
     data = _load_toml(config_path.read_text(encoding="utf-8"))
     projects = data.get("projects", {})
     keys = sorted(projects.keys())
-    checks.append(
-        CheckResult(
-            "config:trusted_projects_portable",
-            isinstance(projects, dict),
-            "trusted project entries=%d; exact local paths are intentionally not governed"
-            % len(keys),
+    expected = set(expectations.get("exact_trusted_projects", []))
+    optional = set(expectations.get("allowed_optional_trusted_projects", []))
+
+    key_set = set(keys)
+    missing = sorted(expected - key_set)
+    extra = sorted(key_set - expected - optional)
+    if missing or extra:
+        checks.append(
+            CheckResult(
+                "config:trusted_projects_exact",
+                False,
+                "missing=%s extra=%s" % (missing, extra),
+            )
         )
-    )
+    else:
+        checks.append(
+            CheckResult(
+                "config:trusted_projects_exact",
+                True,
+                "trusted project set matches manifest plus allowed optional entries",
+            )
+        )
 
     forbidden_exact = expectations.get("forbidden_exact_project_keys", [])
     exact_hits = [key for key in keys if key in forbidden_exact]
@@ -1689,18 +1701,403 @@ def _audit_root_index_manifest_alignment(
     return checks
 
 
+def _read_text_file(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def _audit_text_contains_all(
+    path: Path,
+    label: str,
+    phrases: List[str],
+) -> CheckResult:
+    text = _read_text_file(path)
+    missing = [phrase for phrase in phrases if phrase not in text]
+    return CheckResult(
+        label,
+        not missing,
+        "missing=%s" % missing if missing else "all required phrases present",
+    )
+
+
+def _audit_section_contains_all(
+    section_text: str,
+    label: str,
+    phrases: List[str],
+) -> CheckResult:
+    missing = [phrase for phrase in phrases if phrase not in section_text]
+    return CheckResult(
+        label,
+        not missing,
+        "missing=%s" % missing if missing else "all required markers present",
+    )
+
+
+def _audit_section_excludes_all(
+    section_text: str,
+    label: str,
+    phrases: List[str],
+) -> CheckResult:
+    hits = [phrase for phrase in phrases if phrase in section_text]
+    return CheckResult(
+        label,
+        not hits,
+        "stale_markers=%s" % hits if hits else "no stale markers present",
+    )
+
+
+def _audit_supervisor_workflow_contract(
+    root: Path,
+    manifest: Dict[str, Any],
+) -> List[CheckResult]:
+    contract = manifest.get("supervisor_workflow_contract", {})
+    if not contract:
+        return [
+            CheckResult(
+                "supervisor_workflow_contract:manifest",
+                False,
+                "missing supervisor_workflow_contract",
+            )
+        ]
+
+    checks: List[CheckResult] = []
+    skill_path = root / contract["skill_path"]
+    checks.append(
+        _check_path(
+            skill_path,
+            "file",
+            True,
+            "supervisor_workflow:skill",
+        )
+    )
+    checks.append(
+        _audit_text_contains_all(
+            skill_path,
+            "supervisor_workflow:skill_contract",
+            contract.get("required_skill_phrases", []),
+        )
+    )
+    for relpath in contract.get("required_skill_references", []):
+        checks.append(
+            _check_path(
+                root / relpath,
+                "file",
+                True,
+                "supervisor_workflow:reference:%s" % relpath,
+            )
+        )
+
+    for pack in contract.get("live_packs", []):
+        pack_root = root / pack["path"]
+        pack_label = "supervisor_workflow:pack:%s" % pack["id"]
+        checks.append(_check_path(pack_root, "dir", True, pack_label))
+        for filename in contract.get("required_pack_files", []):
+            checks.append(
+                _check_path(
+                    pack_root / filename,
+                    "file",
+                    True,
+                    "%s:file:%s" % (pack_label, filename),
+                )
+            )
+
+        ledger_path = pack_root / "supervisor_ledger.md"
+        state_path = pack_root / "state_machine.md"
+        protocol_path = pack_root / "child_execution_protocol.md"
+        checklist_path = pack_root / "round_self_checklist.md"
+
+        ledger_text = _read_text_file(ledger_path)
+        state_text = _read_text_file(state_path)
+
+        missing_sections = [
+            section
+            for section in contract.get("required_ledger_sections", [])
+            if "## %s" % section not in ledger_text
+        ]
+        checks.append(
+            CheckResult(
+                "%s:ledger_sections" % pack_label,
+                not missing_sections,
+                (
+                    "missing=%s" % missing_sections
+                    if missing_sections
+                    else "all required ledger sections present"
+                ),
+            )
+        )
+
+        missing_phases = [
+            phase
+            for phase in contract.get("required_state_phases", [])
+            if "`%s:" % phase not in state_text and "Current phase: `%s`" % phase not in state_text
+        ]
+        checks.append(
+            CheckResult(
+                "%s:state_phases" % pack_label,
+                not missing_phases,
+                (
+                    "missing=%s" % missing_phases
+                    if missing_phases
+                    else "all required phases present"
+                ),
+            )
+        )
+
+        checks.append(
+            _audit_text_contains_all(
+                protocol_path,
+                "%s:protocol_gate" % pack_label,
+                contract.get("required_protocol_phrases", []),
+            )
+        )
+        checks.append(
+            _audit_text_contains_all(
+                checklist_path,
+                "%s:checklist_gate" % pack_label,
+                contract.get("required_checklist_items", []),
+            )
+        )
+
+        required_markers = pack.get("objective_markers", [])
+        missing_markers = [
+            marker
+            for marker in required_markers
+            if marker not in ledger_text and marker not in state_text
+        ]
+        checks.append(
+            CheckResult(
+                "%s:current_objective" % pack_label,
+                not missing_markers,
+                (
+                    "missing=%s" % missing_markers
+                    if missing_markers
+                    else "current objective markers present"
+                ),
+            )
+        )
+
+        active_text = _current_frontier_text(ledger_text) + "\n" + _current_phase_text(state_text)
+        stale_markers = [
+            marker
+            for marker in pack.get("forbidden_current_frontier_markers", [])
+            if marker in active_text
+        ]
+        checks.append(
+            CheckResult(
+                "%s:no_stale_frontier" % pack_label,
+                not stale_markers,
+                (
+                    "stale_markers=%s" % stale_markers
+                    if stale_markers
+                    else "no stale current-frontier markers"
+                ),
+            )
+        )
+        checks.append(
+            _audit_section_contains_all(
+                _current_frontier_text(ledger_text),
+                "%s:current_frontier_required_markers" % pack_label,
+                pack.get("current_frontier_required_markers", []),
+            )
+        )
+        checks.append(
+            _audit_section_contains_all(
+                _ledger_section_text(ledger_text, "Only Question Next Round"),
+                "%s:only_question_required_markers" % pack_label,
+                pack.get("only_question_required_markers", []),
+            )
+        )
+        checks.append(
+            _audit_section_excludes_all(
+                _ledger_section_text(ledger_text, "Forbidden Next Round"),
+                "%s:forbidden_next_round_no_stale_markers" % pack_label,
+                pack.get("forbidden_next_round_forbidden_markers", []),
+            )
+        )
+        checks.append(
+            _audit_section_contains_all(
+                _ledger_section_text(ledger_text, "Promotion Gate"),
+                "%s:promotion_gate_required_markers" % pack_label,
+                pack.get("promotion_gate_required_markers", []),
+            )
+        )
+        checks.append(
+            _audit_section_excludes_all(
+                _ledger_section_text(ledger_text, "Promotion Gate"),
+                "%s:promotion_gate_no_stale_markers" % pack_label,
+                pack.get("promotion_gate_forbidden_markers", []),
+            )
+        )
+    return checks
+
+
+def _audit_project_task_workflow_contract(
+    root: Path,
+    manifest: Dict[str, Any],
+) -> List[CheckResult]:
+    contract = manifest.get("project_task_workflow_contract", {})
+    if not contract:
+        return [
+            CheckResult(
+                "project_task_workflow_contract:manifest",
+                False,
+                "missing project_task_workflow_contract",
+            )
+        ]
+
+    checks: List[CheckResult] = []
+    script_path = root / contract["script_path"]
+    workflow_doc = root / contract["workflow_doc"]
+    checks.append(
+        _check_path(
+            script_path,
+            "file",
+            True,
+            "project_task_workflow:script",
+        )
+    )
+    checks.append(
+        _check_path(
+            workflow_doc,
+            "file",
+            True,
+            "project_task_workflow:doc",
+        )
+    )
+    for relpath in contract.get("template_paths", []):
+        checks.append(
+            _check_path(
+                root / relpath,
+                "file",
+                True,
+                "project_task_workflow:template:%s" % relpath,
+            )
+        )
+
+    checks.append(
+        _audit_text_contains_all(
+            workflow_doc,
+            "project_task_workflow:doc_contract",
+            contract.get("required_doc_phrases", []),
+        )
+    )
+    checks.append(
+        _audit_text_contains_all(
+            script_path,
+            "project_task_workflow:script_contract",
+            contract.get("required_script_phrases", []),
+        )
+    )
+
+    script_text = _read_text_file(script_path)
+    doc_text = _read_text_file(workflow_doc)
+    combined_text = script_text + "\n" + doc_text
+    checks.append(
+        CheckResult(
+            "project_task_workflow:task_root",
+            contract.get("project_task_root", "") in combined_text,
+            "project task root=%s" % contract.get("project_task_root", ""),
+        )
+    )
+    checks.append(
+        CheckResult(
+            "project_task_workflow:session_root",
+            contract.get("project_session_root", "") in combined_text,
+            "project session root=%s" % contract.get("project_session_root", ""),
+        )
+    )
+
+    missing_artifacts = [
+        artifact
+        for artifact in contract.get("required_artifacts", [])
+        if artifact not in combined_text
+    ]
+    checks.append(
+        CheckResult(
+            "project_task_workflow:required_artifacts",
+            not missing_artifacts,
+            (
+                "missing=%s" % missing_artifacts
+                if missing_artifacts
+                else "all required artifacts present"
+            ),
+        )
+    )
+
+    missing_statuses = [
+        status
+        for status in contract.get("required_statuses", [])
+        if status not in script_text
+    ]
+    checks.append(
+        CheckResult(
+            "project_task_workflow:required_statuses",
+            not missing_statuses,
+            (
+                "missing=%s" % missing_statuses
+                if missing_statuses
+                else "all required statuses present"
+            ),
+        )
+    )
+
+    missing_commands = [
+        command
+        for command in contract.get("required_commands", [])
+        if 'add_parser("%s"' % command not in script_text
+        and "add_parser('%s'" % command not in script_text
+    ]
+    checks.append(
+        CheckResult(
+            "project_task_workflow:required_commands",
+            not missing_commands,
+            (
+                "missing=%s" % missing_commands
+                if missing_commands
+                else "all required commands present"
+            ),
+        )
+    )
+    return checks
+
+
+def _current_frontier_text(ledger_text: str) -> str:
+    return _ledger_section_text(ledger_text, "Current Frontier")
+
+
+def _ledger_section_text(ledger_text: str, section_name: str) -> str:
+    marker = "## %s" % section_name
+    start = ledger_text.rfind(marker)
+    if start < 0:
+        return ""
+    next_start = ledger_text.find("\n## ", start + len(marker))
+    if next_start < 0:
+        return ledger_text[start:]
+    return ledger_text[start:next_start]
+
+
+def _current_phase_text(state_text: str) -> str:
+    marker = "## Current Phase"
+    start = state_text.rfind(marker)
+    if start < 0:
+        return ""
+    next_start = state_text.find("\n## ", start + len(marker))
+    if next_start < 0:
+        return state_text[start:]
+    return state_text[start:next_start]
+
+
 def audit_home(root: Path, manifest: Dict[str, Any], config_path: Path) -> List[CheckResult]:
     checks: List[CheckResult] = []
     root_index_path = root / "core/control_plane/codex_home_surface_index.json"
-    manifest_root_value = str(manifest["home_root"])
-    manifest_root = Path(manifest_root_value).expanduser().resolve()
-    portable_root = manifest_root_value in {"~/.codex", "$CODEX_HOME", "${CODEX_HOME}"}
+    manifest_root = Path(manifest["home_root"]).resolve()
     checks.append(
         CheckResult(
             "manifest:home_root",
-            portable_root or manifest_root == root.resolve(),
-            "manifest root=%s audit root=%s portable=%s"
-            % (manifest_root_value, root.resolve(), portable_root),
+            manifest_root == root.resolve(),
+            "manifest root=%s audit root=%s" % (manifest_root, root.resolve()),
         )
     )
     checks.extend(_audit_generated_contract_files(root, manifest))
@@ -1719,6 +2116,8 @@ def audit_home(root: Path, manifest: Dict[str, Any], config_path: Path) -> List[
     checks.extend(_audit_rule_surface(root, manifest))
     checks.extend(_audit_config(config_path, manifest["config_expectations"]))
     checks.extend(_audit_contract_registries(root, root_index_path, manifest))
+    checks.extend(_audit_supervisor_workflow_contract(root, manifest))
+    checks.extend(_audit_project_task_workflow_contract(root, manifest))
     return checks
 
 
@@ -1889,23 +2288,24 @@ def _audit_contract_registries(
 
 
 def _parse_args() -> argparse.Namespace:
+    default_root = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
     parser = argparse.ArgumentParser(
-        description="Audit a Codex home layout against the layout manifest."
+        description="Audit the current ~/.codex home layout against the layout manifest."
     )
     parser.add_argument(
         "--root",
-        default=str(DEFAULT_ROOT),
-        help="Codex home root to audit.",
+        default=str(default_root),
+        help="Codex home root to audit. Defaults to CODEX_HOME or ~/.codex.",
     )
     parser.add_argument(
         "--manifest",
-        default="",
-        help="Path to the layout manifest JSON. Defaults to <root>/core/control_plane/codex_home_layout_manifest.json.",
+        default=str(default_root / "core/control_plane/codex_home_layout_manifest.json"),
+        help="Path to the layout manifest JSON.",
     )
     parser.add_argument(
         "--config",
-        default="",
-        help="Path to the config.toml file to audit. Defaults to <root>/config.toml.",
+        default=str(default_root / "config.toml"),
+        help="Path to the config.toml file to audit.",
     )
     parser.add_argument(
         "--json",
@@ -1918,12 +2318,8 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     args = _parse_args()
     root = Path(args.root).resolve()
-    manifest_path = (
-        Path(args.manifest)
-        if args.manifest
-        else root / "core/control_plane/codex_home_layout_manifest.json"
-    )
-    config_path = Path(args.config) if args.config else root / "config.toml"
+    manifest_path = Path(args.manifest)
+    config_path = Path(args.config)
 
     if not manifest_path.exists():
         print("manifest missing: %s" % manifest_path, file=sys.stderr)

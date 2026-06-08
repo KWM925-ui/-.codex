@@ -108,7 +108,7 @@ not yet safe to move physically without another compatibility phase.
 Run:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/audit_codex_home_layout.py
+python3 /home/example/.codex/core/control_plane/scripts/audit_codex_home_layout.py
 ```
 
 Use `--json` if another tool needs structured output.

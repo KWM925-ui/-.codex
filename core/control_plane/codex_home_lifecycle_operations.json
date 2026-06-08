@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "generated_for_layout_version": "2026-05-11.phase18",
   "global_rules": {
     "default_execution_mode": "compatibility_first",
     "allow_hard_delete": false,
@@ -54,6 +54,22 @@
     {
       "selector_type": "core_category",
       "selector": "config_live",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "compatibility_category",
+      "selector": "core",
+      "allowed_actions": [
+        "preserve",
+        "manual_review"
+      ]
+    },
+    {
+      "selector_type": "compatibility_category",
+      "selector": "project_assets",
       "allowed_actions": [
         "preserve",
         "manual_review"

@@ -71,7 +71,7 @@ When the operator needs a whole-home posture summary instead of one surface at a
 time, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/report_codex_home_policy.py
+python3 /home/example/.codex/core/control_plane/scripts/report_codex_home_policy.py
 ```
 
 That report batches all governed root surfaces plus registered namespace roots
@@ -91,7 +91,7 @@ When the next action is specifically about the reversible runtime batch from the
 governance report, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/review_runtime_reversible_targets.py
+python3 /home/example/.codex/core/control_plane/scripts/review_runtime_reversible_targets.py
 ```
 
 That focused review keeps the operator inside the bounded reversible runtime
@@ -109,7 +109,7 @@ When the next action is specifically about the tool-owned target batch from the
 governance report, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/review_tool_owned_targets.py
+python3 /home/example/.codex/core/control_plane/scripts/review_tool_owned_targets.py
 ```
 
 That focused review keeps the operator inside the bounded tool-owned scope and
@@ -126,7 +126,7 @@ adds:
 When the next action is specifically about the archive-governed surfaces, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/review_archive_governed_targets.py
+python3 /home/example/.codex/core/control_plane/scripts/review_archive_governed_targets.py
 ```
 
 That focused review keeps the operator inside the bounded archive-governed
@@ -144,7 +144,7 @@ When the next action is specifically about proposal-grade migration candidates,
 use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/review_migration_candidates.py
+python3 /home/example/.codex/core/control_plane/scripts/review_migration_candidates.py
 ```
 
 That review surfaces the currently governed migration candidates and verifies
@@ -157,7 +157,7 @@ When the next action is specifically about ingress noise, untrusted content,
 or context-budget discipline, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/audit_context_firewall.py
+python3 /home/example/.codex/core/control_plane/scripts/audit_context_firewall.py
 ```
 
 That audit verifies the governed context-firewall contracts for:
@@ -171,7 +171,7 @@ To inspect source posture, relevance demotion/drop behavior, profile budgets,
 and current runtime-integration status, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/review_context_firewall.py
+python3 /home/example/.codex/core/control_plane/scripts/review_context_firewall.py
 ```
 
 That review is intentionally report-only. It does not mutate sessions,
@@ -181,7 +181,7 @@ To probe real session/tool ingress through the same firewall in report-only
 mode, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/probe_context_ingress.py
+python3 /home/example/.codex/core/control_plane/scripts/probe_context_ingress.py
 ```
 
 That probe selects the newest session by default, emits no raw session content,
@@ -192,7 +192,7 @@ To compare strict, balanced, and exploratory filtering against the same real
 session candidates before changing policy strength, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/compare_context_profiles.py
+python3 /home/example/.codex/core/control_plane/scripts/compare_context_profiles.py
 ```
 
 That comparison is intentionally report-only. It emits profile-level deltas and
@@ -203,7 +203,7 @@ To evaluate profile behavior across multiple representative session probes
 before changing thresholds or attaching runtime hooks, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/evaluate_context_profiles.py
+python3 /home/example/.codex/core/control_plane/scripts/evaluate_context_profiles.py
 ```
 
 That evaluation aggregates only redacted metadata across selected sessions and
@@ -213,7 +213,7 @@ does not mutate sessions, memories, runtime databases, or tool ingress paths.
 To build a deterministic curated context bundle from heterogeneous inputs, use:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/build_curated_context.py \
+python3 /home/example/.codex/core/control_plane/scripts/build_curated_context.py \
   --input /path/to/context_items.json \
   --profile balanced \
   --json

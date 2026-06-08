@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Pattern, Tuple
 
 
-DEFAULT_ROOT = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")).expanduser()
+DEFAULT_ROOT = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
 
 INGRESS_POLICY_PATH = "core/control_plane/context_ingress_policy.json"
 MEMORY_POLICY_PATH = "core/control_plane/memory_admission_policy.json"

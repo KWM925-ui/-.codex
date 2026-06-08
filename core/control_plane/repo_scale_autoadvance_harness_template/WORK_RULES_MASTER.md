@@ -1,6 +1,6 @@
 # Mock Repo-Scale Work Rules
 
-- This is a control-plane harness, not a real project.
+- This is a control-plane harness, not the real Sample project project.
 - Fresh local evidence only.
 - The only code edit allowed is the unique patch in
   `src/stack/front_end/progress_budget.py`.

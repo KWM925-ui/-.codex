@@ -9,9 +9,49 @@ run_root="${3:-/tmp/repeatability_widening_regression_${timestamp}}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 materialize="${script_dir}/materialize_repeatability_widening_harness.sh"
 
+echo "warning: this regression writes temporary harness artifacts under ${run_root} and runs real codex exec with bypassed approvals/sandbox inside that temp harness." >&2
+
 mkdir -p "$run_root"
 
 pass_count=0
+config_path="${CODEX_HOME:-${HOME}/.codex}/config.toml"
+
+cleanup_tmp_trusted_projects() {
+  if [[ ! -f "$config_path" ]] || ! grep -Eq '^\[projects\."\/tmp(\/[^"]*)?"\]$' "$config_path"; then
+    return
+  fi
+  local tmp_config
+  tmp_config="$(mktemp "${config_path}.tmp.XXXXXX")"
+  awk '
+    /^\[projects\."\/tmp(\/[^"]*)?"\]$/ { skip=1; next }
+    skip && /^\[/ { skip=0 }
+    !skip { print }
+  ' "$config_path" >"$tmp_config"
+  chmod --reference="$config_path" "$tmp_config"
+  mv "$tmp_config" "$config_path"
+}
+
+trap cleanup_tmp_trusted_projects EXIT
+
+run_codex_exec() {
+  local case_dir="$1"
+  local exec_log="$2"
+  local case_label="$3"
+  local attempts="${CODEX_REGRESSION_ATTEMPTS:-3}"
+  local retry_sleep="${CODEX_REGRESSION_RETRY_SLEEP_SECONDS:-20}"
+
+  for attempt in $(seq 1 "$attempts"); do
+    if codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox --ephemeral --color never -C "$case_dir" "$prompt" >"$exec_log" 2>&1; then
+      return 0
+    fi
+    if [[ "$attempt" -lt "$attempts" ]] && rg -qi '429 Too Many Requests|exceeded retry limit' "$exec_log"; then
+      echo "${case_label}: retry ${attempt}/${attempts} after transient rate limit" >&2
+      sleep "$retry_sleep"
+      continue
+    fi
+    return 1
+  done
+}
 
 for i in $(seq 1 "$count"); do
   case_dir="${run_root}/case_$(printf '%02d' "$i")"
@@ -27,7 +67,7 @@ for i in $(seq 1 "$count"); do
   fi
 
   exec_log="${case_dir}/codex_exec.log"
-  if ! codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral --color never -C "$case_dir" "$prompt" >"${exec_log}" 2>&1; then
+  if ! run_codex_exec "$case_dir" "$exec_log" "case_${i}"; then
     echo "case_${i}: FAIL codex exec returned non-zero"
     continue
   fi

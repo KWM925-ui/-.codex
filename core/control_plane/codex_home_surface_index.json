@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "generated_for_layout_version": "2026-05-11.phase18",
   "root_surfaces": [
     {
       "path": ".personality_migration",
@@ -67,7 +67,7 @@
       "notes": "Active Codex configuration."
     },
     {
-      "path": "config.toml.example-snapshot",
+      "path": "config.toml.before-openai-login.20260428-134805",
       "kind": "file",
       "layer": "history",
       "status": "authoritative_root",
@@ -195,12 +195,12 @@
       "notes": "Hot goal/runtime database sidecar currently owned by Codex runtime."
     },
     {
-      "path": "example_project_supervisor",
+      "path": "sample_project_supervisor",
       "kind": "symlink",
       "layer": "project_assets",
       "status": "compatibility_symlink",
       "category": "project_entrypoint",
-      "notes": "Compatibility entrypoint to project_assets/example_project/supervisor."
+      "notes": "Compatibility entrypoint to project_assets/sample_project/supervisor."
     },
     {
       "path": "plugins",
@@ -243,6 +243,14 @@
       "notes": "Session index surface mirrored from history/session_index.jsonl."
     },
     {
+      "path": "session_index.jsonl.bak_20260604_2109",
+      "kind": "file",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_index_snapshot",
+      "notes": "Local session-index backup preserved as history evidence."
+    },
+    {
       "path": "sessions",
       "kind": "dir",
       "layer": "history",
@@ -283,6 +291,22 @@
       "notes": "Hot runtime database mirrored from runtime/state/state_5.sqlite."
     },
     {
+      "path": "state_5.sqlite.bak_20260604_2110",
+      "kind": "file",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_state_snapshot",
+      "notes": "Local runtime-state backup preserved as reversible evidence."
+    },
+    {
+      "path": "state_5.sqlite.bak_ui_probe_20260605_054407",
+      "kind": "file",
+      "layer": "history",
+      "status": "authoritative_root",
+      "category": "history_state_snapshot",
+      "notes": "Local UI probe runtime-state backup preserved as reversible evidence."
+    },
+    {
       "path": "state_5.sqlite-shm",
       "kind": "file",
       "layer": "runtime",
@@ -315,12 +339,20 @@
       "notes": "Hot temporary/runtime surface mirrored from runtime/temp/tmp."
     },
     {
-      "path": "reference_mirror_example",
+      "path": "ui_thread_supervisor",
+      "kind": "dir",
+      "layer": "project_assets",
+      "status": "authoritative_root",
+      "category": "productization_workspace",
+      "notes": "Local UI-thread supervisor pack kept outside reusable core until explicitly promoted."
+    },
+    {
+      "path": "upstream_audit",
       "kind": "symlink",
       "layer": "project_assets",
       "status": "compatibility_symlink",
       "category": "project_entrypoint",
-      "notes": "Compatibility entrypoint to project_assets/reference_mirrors/reference_mirror_example."
+      "notes": "Compatibility entrypoint to project_assets/reference_mirrors/upstream_audit."
     },
     {
       "path": "vendor_imports",
@@ -331,12 +363,12 @@
       "notes": "Compatibility entrypoint to project_assets/shared_imports/vendor_imports."
     },
     {
-      "path": "example_worktree_snapshots",
+      "path": "worktree_snapshots",
       "kind": "symlink",
       "layer": "project_assets",
       "status": "compatibility_symlink",
       "category": "project_entrypoint",
-      "notes": "Compatibility entrypoint to project_assets/example_project/evidence/worktree_snapshots."
+      "notes": "Compatibility entrypoint to project_assets/sample_project/evidence/worktree_snapshots."
     }
   ]
 }

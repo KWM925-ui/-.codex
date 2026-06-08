@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "layout_version": "portable-2026-06-04.phase1",
-  "home_root": "~/.codex",
+  "layout_version": "2026-05-11.phase18",
+  "home_root": "/home/example/.codex",
   "layers": [
     {
       "id": "core",
@@ -54,6 +54,11 @@
     "core/control_plane/README.md",
     "core/control_plane/codex_home_governance.md",
     "core/control_plane/codex_home_operations.md",
+    "core/control_plane/project_task_workflow.md",
+    "core/control_plane/templates/project_task_pack/README.template.md",
+    "core/control_plane/templates/project_task_pack/prd.template.md",
+    "core/control_plane/templates/project_task_pack/implement.template.md",
+    "core/control_plane/templates/project_task_pack/context_manifest.README.md",
     "core/control_plane/context_firewall.md",
     "core/control_plane/codex_home_migration_candidates.json",
     "core/control_plane/context_ingress_policy.json",
@@ -76,6 +81,7 @@
     "core/control_plane/scripts/review_archive_governed_targets.py",
     "core/control_plane/scripts/review_lifecycle_candidates.py",
     "core/control_plane/scripts/review_migration_candidates.py",
+    "core/control_plane/scripts/audit_codex_public_export.py",
     "core/control_plane/scripts/audit_context_firewall.py",
     "core/control_plane/scripts/review_context_firewall.py",
     "core/control_plane/scripts/probe_context_ingress.py",
@@ -86,7 +92,9 @@
     "core/control_plane/scripts/agent_e2e_common.py",
     "core/control_plane/scripts/agent_e2e_real_runner.py",
     "core/control_plane/scripts/run_agent_e2e_evals.py",
-    "core/control_plane/scripts/run_codex_home_acceptance.py"
+    "core/control_plane/scripts/run_codex_home_acceptance.py",
+    "core/control_plane/scripts/summarize_supervisor_current_state.py",
+    "core/control_plane/scripts/project_task_workflow.py"
   ],
   "generated_contract_files": [
     "core/control_plane/codex_home_surface_index.json",
@@ -147,8 +155,8 @@
       "category": "core"
     },
     {
-      "path": "example_project_supervisor",
-      "expected_target": "project_assets/example_project/supervisor",
+      "path": "sample_project_supervisor",
+      "expected_target": "project_assets/sample_project/supervisor",
       "category": "project_assets"
     },
     {
@@ -157,13 +165,13 @@
       "category": "project_assets"
     },
     {
-      "path": "reference_mirror_example",
-      "expected_target": "project_assets/reference_mirrors/reference_mirror_example",
+      "path": "upstream_audit",
+      "expected_target": "project_assets/reference_mirrors/upstream_audit",
       "category": "project_assets"
     },
     {
-      "path": "example_worktree_snapshots",
-      "expected_target": "project_assets/example_project/evidence/worktree_snapshots",
+      "path": "worktree_snapshots",
+      "expected_target": "project_assets/sample_project/evidence/worktree_snapshots",
       "category": "project_assets"
     },
     {
@@ -371,6 +379,24 @@
       "expected_mirror_target": "../session_index.jsonl"
     },
     {
+      "root_path": "session_index.jsonl.bak_20260604_2109",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": ""
+    },
+    {
+      "root_path": "state_5.sqlite.bak_20260604_2110",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": ""
+    },
+    {
+      "root_path": "state_5.sqlite.bak_ui_probe_20260605_054407",
+      "root_kind": "file",
+      "root_must_not_be_symlink": true,
+      "mirror_path": ""
+    },
+    {
       "root_path": "memories",
       "root_kind": "dir",
       "root_must_not_be_symlink": true,
@@ -392,7 +418,7 @@
       "expected_mirror_target": "../shell_snapshots"
     },
     {
-      "root_path": "config.toml.example-snapshot",
+      "root_path": "config.toml.before-openai-login.20260428-134805",
       "root_kind": "file",
       "root_must_not_be_symlink": true,
       "mirror_path": ""
@@ -400,8 +426,8 @@
   ],
   "history_snapshot_surfaces": [
     {
-      "root_path": "config.toml.example-snapshot",
-      "snapshot_kind": "example_config_snapshot",
+      "root_path": "config.toml.before-openai-login.20260428-134805",
+      "snapshot_kind": "pre_login_config_backup",
       "retention_role": "historical configuration evidence",
       "mirror_path": "",
       "required": true
@@ -425,6 +451,7 @@
     ],
     "required_selector_types": [
       "core_category",
+      "compatibility_category",
       "runtime_category",
       "history_category",
       "namespace_type"
@@ -441,6 +468,7 @@
     ],
     "required_selector_types": [
       "core_category",
+      "compatibility_category",
       "runtime_category",
       "history_category",
       "namespace_type"
@@ -448,42 +476,42 @@
   },
   "migration_candidates": [
     {
-      "id": "reference_mirrors_example_phase1",
+      "id": "reference_mirrors_upstream_audit_phase14",
       "selector_type": "namespace_type",
       "selector": "reference_bundle",
       "target": "project_assets/reference_mirrors",
       "candidate_kind": "compatibility_preserving_namespace_archive_candidate",
-      "phase": "portable_phase1",
-      "scope_root": "project_assets/reference_mirrors/reference_mirror_example",
+      "phase": "phase14",
+      "scope_root": "project_assets/reference_mirrors/upstream_audit",
       "compatibility_entrypoints": [
-        "reference_mirror_example"
+        "upstream_audit"
       ],
       "protected_paths": [
         "project_assets/reference_mirrors",
-        "project_assets/reference_mirrors/reference_mirror_example",
-        "reference_mirror_example"
+        "project_assets/reference_mirrors/upstream_audit",
+        "upstream_audit"
       ],
       "preconditions": [
         "No physical move of the authoritative reference mirror tree in the current phase.",
-        "The root compatibility entrypoint reference_mirror_example must continue to resolve to the namespace-owned example mirror tree.",
+        "The root compatibility entrypoint upstream_audit must continue to resolve to the namespace-owned upstream_audit tree.",
         "Namespace registry, manifest, and migration candidate contract must stay version-aligned before any future move candidate is promoted.",
         "Reference provenance and bundle identity must remain intact across any future archive handling."
       ],
       "planned_steps": [
-        "Treat project_assets/reference_mirrors/reference_mirror_example as the example namespace anchor for reference mirror bundles.",
-        "Preserve the root reference_mirror_example symlink unchanged as the required compatibility entrypoint for this sample contract.",
-        "Keep reference subtrees namespaced under the reference_mirrors root; do not flatten per-repository mirrors into new top-level paths.",
-        "If a later phase introduces deeper archive partitioning, update contracts and keep compatibility entrypoints resolving through a compatibility layer."
+        "Treat project_assets/reference_mirrors/upstream_audit as the sole authoritative namespace anchor for the mirror bundle.",
+        "Preserve the root upstream_audit symlink unchanged as the only required compatibility entrypoint in this phase.",
+        "Keep upstream subtrees namespaced under the existing upstream_audit root; do not flatten per-repository mirrors into new top-level paths.",
+        "If a later phase introduces deeper archive partitioning, update contracts and keep upstream_audit resolving through a compatibility layer."
       ],
       "forbidden_actions": [
-        "No destructive cleanup of mirrored reference repositories.",
-        "No removal or repointing of the reference_mirror_example compatibility symlink in the current phase.",
-        "No in-place rewriting of mirrored reference repositories only to normalize layout.",
+        "No destructive cleanup of mirrored upstream repositories.",
+        "No removal or repointing of the upstream_audit compatibility symlink in the current phase.",
+        "No in-place rewriting of mirrored upstream repositories only to normalize layout.",
         "No introduction of new root-level reference-mirror trees outside project_assets/reference_mirrors."
       ],
       "validation_commands": [
-        "python3 core/control_plane/scripts/audit_codex_home_layout.py --root \"$CODEX_HOME\"",
-        "python3 core/control_plane/scripts/review_archive_governed_targets.py --root \"$CODEX_HOME\""
+        "python3 /home/example/.codex/core/control_plane/scripts/audit_codex_home_layout.py",
+        "python3 /home/example/.codex/core/control_plane/scripts/review_archive_governed_targets.py"
       ]
     }
   ],
@@ -558,6 +586,148 @@
       "drop"
     ]
   },
+  "supervisor_workflow_contract": {
+    "skill_path": "core/skills/execution-supervisor/SKILL.md",
+    "required_skill_references": [
+      "core/skills/execution-supervisor/references/operating-rules.md",
+      "core/skills/execution-supervisor/references/pack-schema.md",
+      "core/skills/execution-supervisor/references/activation-patterns.md"
+    ],
+    "required_skill_phrases": [
+      "live frontier or ledger",
+      "strict facts-vs-hypotheses separation",
+      "Do not run formal experiments or write new patches unless the ledger and the",
+      "Treat the ledger as the live source of truth"
+    ],
+    "required_pack_files": [
+      "README.md",
+      "activate_supervisor_mode.md",
+      "child_execution_protocol.md",
+      "round_self_checklist.md",
+      "state_machine.md",
+      "supervisor_ledger.md"
+    ],
+    "required_ledger_sections": [
+      "Locked Facts",
+      "Newly Locked This Round",
+      "Newly Demoted This Round",
+      "Current Frontier",
+      "Only Question Next Round",
+      "Forbidden Next Round",
+      "Promotion Gate"
+    ],
+    "required_state_phases": [
+      "S0",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8"
+    ],
+    "required_protocol_phrases": [
+      "Solve only the ledger's current question",
+      "No formal run and no new patch unless both",
+      "the phase allows it",
+      "and the ledger explicitly allows it"
+    ],
+    "required_checklist_items": [
+      "Did I reopen a ruled-out chain",
+      "Did I drift from the current frontier",
+      "Did I write a hypothesis as a fact",
+      "Promotion Gate"
+    ],
+    "live_packs": [
+      {
+        "id": "codex_home",
+        "path": "project_assets/codex_home/supervisor",
+        "objective_markers": [
+          "agent end-to-end workflow",
+          "minimal isolated Codex home"
+        ],
+        "current_frontier_required_markers": [
+          "project-local task workflow",
+          "project_task_workflow.py",
+          "--confirm-plan-reviewed"
+        ],
+        "only_question_required_markers": [
+          "pilot",
+          "real target repo",
+          "without copying Trellis"
+        ],
+        "forbidden_next_round_forbidden_markers": [
+          "second bounded migration candidate",
+          "layout governance"
+        ],
+        "promotion_gate_required_markers": [
+          "project_task_workflow_smoke",
+          "layout audit",
+          "context-firewall audit",
+          "default acceptance"
+        ],
+        "promotion_gate_forbidden_markers": [
+          "second bounded migration candidate",
+          "layout governance"
+        ],
+        "forbidden_current_frontier_markers": [
+          "second bounded migration candidate",
+          "layout governance"
+        ]
+      }
+    ]
+  },
+  "project_task_workflow_contract": {
+    "script_path": "core/control_plane/scripts/project_task_workflow.py",
+    "workflow_doc": "core/control_plane/project_task_workflow.md",
+    "template_paths": [
+      "core/control_plane/templates/project_task_pack/README.template.md",
+      "core/control_plane/templates/project_task_pack/prd.template.md",
+      "core/control_plane/templates/project_task_pack/implement.template.md",
+      "core/control_plane/templates/project_task_pack/context_manifest.README.md"
+    ],
+    "project_task_root": ".codex/tasks",
+    "project_session_root": ".codex/task_runtime/sessions",
+    "required_artifacts": [
+      "task.json",
+      "prd.md",
+      "design.md",
+      "implement.md",
+      "implement.jsonl",
+      "check.jsonl",
+      "research",
+      "lessons.md"
+    ],
+    "required_statuses": [
+      "planning",
+      "in_progress",
+      "completed",
+      "archived"
+    ],
+    "required_commands": [
+      "create",
+      "start",
+      "add-context",
+      "validate",
+      "complete",
+      "archive",
+      "status"
+    ],
+    "required_doc_phrases": [
+      "Creating a task records planning state only",
+      "Starting implementation is a separate step",
+      "User consent to create a task does not imply user consent to start implementation",
+      "stable context references only"
+    ],
+    "required_script_phrases": [
+      "WORKFLOW_KIND = \"codex_project_task\"",
+      "TASKS_DIR = \".codex/tasks\"",
+      "SESSION_DIR = \".codex/task_runtime/sessions\"",
+      "--confirm-plan-reviewed",
+      "source-like file is not allowed in context manifests"
+    ]
+  },
   "project_namespaces": [
     {
       "id": "codex_home",
@@ -568,13 +738,13 @@
       ]
     },
     {
-      "id": "example_project",
-      "path": "project_assets/example_project",
-      "role": "example project overlay, case evidence, and frozen worktree evidence",
+      "id": "sample_project",
+      "path": "project_assets/sample_project",
+      "role": "project overlay, case evidence, and frozen worktree evidence",
       "required_paths": [
-        "project_assets/example_project/supervisor",
-        "project_assets/example_project/control_plane_cases",
-        "project_assets/example_project/evidence"
+        "project_assets/sample_project/supervisor",
+        "project_assets/sample_project/control_plane_cases",
+        "project_assets/sample_project/evidence"
       ]
     },
     {
@@ -590,7 +760,7 @@
       "path": "project_assets/reference_mirrors",
       "role": "reference source mirrors that are not reusable core assets",
       "required_paths": [
-        "project_assets/reference_mirrors/reference_mirror_example"
+        "project_assets/reference_mirrors/upstream_audit"
       ]
     },
     {
@@ -603,6 +773,28 @@
     }
   ],
   "config_expectations": {
+    "exact_trusted_projects": [
+      "/home/example",
+      "/home/example/.codex",
+      "/home/example/codex_autoadvance_harness",
+      "/home/example/example_ws",
+      "/home/example/sample_project_ws",
+      "/home/example/example_sim"
+    ],
+    "allowed_optional_trusted_projects": [
+      "/home/example/example_paper_ws",
+      "/home/example/example_follow_ws",
+      "/home/example/example_j_ws",
+      "/home/example/downloads",
+      "/home/example/pictures",
+      "/media/coco/zl",
+      "/media/coco/zl/haimd",
+      "/media/coco/zl/makemoney",
+      "/media/coco/zl/project",
+      "/media/coco/zl/project1",
+      "/media/coco/zl/phototrans",
+      "/media/coco/zl/waste"
+    ],
     "forbidden_exact_project_keys": [
       "/"
     ],

@@ -23,9 +23,9 @@ clear project-local control surfaces.
 
 ## Required Read Order
 
-1. `$CODEX_HOME/core/control_plane/project_bootstrap.md`
-2. `$CODEX_HOME/core/control_plane/global_execution_contract.md`
-3. `$CODEX_HOME/core/control_plane/stable_user_preferences.md`
+1. `/home/example/.codex/control_plane/project_bootstrap.md`
+2. `/home/example/.codex/control_plane/global_execution_contract.md`
+3. `/home/example/.codex/control_plane/stable_user_preferences.md`
 4. Repository `AGENTS.md` or fallback project docs if they exist
 
 ## Workflow
@@ -36,10 +36,11 @@ clear project-local control surfaces.
    - dirty-tree boundary
    - generated artifacts vs real edits
 2. Decide whether the task needs only a small local workflow or supervisor mode.
-   Use the project task workflow when the missing layer is task lifecycle rather
-   than repository-wide bootstrap.
 3. If repo-local control assets are missing and the work will last:
    - create or tighten repository `AGENTS.md`
+   - create a project-local task pack when the work needs explicit
+     requirements, design, implementation, verification, and lessons without
+     entering full debugging supervision
    - create or tighten a plan/ledger if continuity is required
    - if the task is acceptance-style or debugging-heavy, switch to
      `execution-supervisor`
@@ -51,13 +52,22 @@ clear project-local control surfaces.
 
 Use these when scaffolding project-local assets:
 
-- `$CODEX_HOME/core/control_plane/templates/repo_AGENTS.template.md`
-- `$CODEX_HOME/core/control_plane/templates/PLANS.template.md`
-- `$CODEX_HOME/core/control_plane/templates/project_task_pack/`
+- `/home/example/.codex/control_plane/templates/repo_AGENTS.template.md`
+- `/home/example/.codex/control_plane/templates/PLANS.template.md`
+- `/home/example/.codex/control_plane/templates/project_task_pack/`
 
-Task workflow command:
+Use this script for project-local task packs:
 
-- `$CODEX_HOME/core/control_plane/scripts/project_task_workflow.py`
+- `/home/example/.codex/control_plane/scripts/project_task_workflow.py`
+
+Important boundary:
+
+- Creating a task pack records planning only.
+- Starting implementation requires explicit plan-review confirmation through
+  `project_task_workflow.py start --confirm-plan-reviewed`.
+- Context manifests should reference stable instructions, specs, docs, or
+  task research; they should not list source files that are about to be
+  modified.
 
 ## Output Standard
 

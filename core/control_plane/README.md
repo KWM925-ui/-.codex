@@ -60,8 +60,6 @@ Layer 3: Skills
   anti-drift execution.
 - Reusable workflow for installing project-local control assets and restarting
   work from a minimal prompt.
-- Reusable project-local task workflow for requirements, design,
-  implementation gating, validation evidence, and lessons.
 
 Layer 4: Project-local assets
 
@@ -84,6 +82,8 @@ Layer 5: Generated recall
 - Bootstrap guidance for new or resumed projects
 - Machine-readable governance for the productized `~/.codex` home layout
 - Reusable templates and activation patterns
+- Reusable project-local task workflow for requirements, design,
+  implementation, verification, active-session state, and lesson capture
 - Regression harness templates and automated control-plane self-tests
 - Operator-facing policy explanation for governed `~/.codex` surfaces
 - Operator-facing doctor output for suggested safe action by governed surface
@@ -111,15 +111,35 @@ Layer 5: Generated recall
   growing one opaque script
 - Real-runner eval presets for the already-validated smoke and current-full
   batches, so costly `codex exec` checks stay explicit, isolated, and repeatable
+- Real-runner isolated homes use generated minimal safe config by default; when
+  `--real-use-live-provider-config` is explicit, only the active provider
+  fragment is copied into a temporary `CODEX_HOME`, secret values are not
+  printed, and the temporary home is deleted after the run
 - Optional stderr-only real-runner progress output, so long `codex exec` evals
   can show bounded progress without corrupting JSON or printing raw model output
 - Optional real-runner fail-fast mode, so costly batches can stop after the
   first clear failure while preserving the stop reason in structured output
 - One bounded acceptance entrypoint for the current control-plane proof set:
-  `run_codex_home_acceptance.py` runs layout audit, context-firewall audit,
-  offline agent e2e, project-task workflow smoke, and hygiene checks by
-  default; real `codex exec` smoke remains explicit through
-  `--include-real-smoke`
+  `run_codex_home_acceptance.py` supports `--gate-profile` levels
+  `quick`, `standard`, `full`, `release`, `real`, and `saturation`; the default
+  `quick` gate keeps ordinary work fast, `release` adds public-export hygiene
+  checks via `--export-root`, and real `codex exec` checks remain explicit
+  through `--include-real-smoke`, `--gate-profile real`, or
+  `--gate-profile saturation`
+- `saturation` is intentionally heavy: it includes offline profile sweeps, the
+  bounded `current-full` real-runner batch, and shell regression wrappers that
+  run in temporary directories and clean those directories on exit
+- Real smoke acceptance now has a safe-auth preflight: it only proceeds when a
+  supported external auth environment variable such as `OPENAI_API_KEY` is
+  present or when `--real-use-live-provider-config` is explicit, reports only
+  safe metadata, and never copies full live config/auth material into the
+  isolated eval home
+- `summarize_supervisor_current_state.py` prints the latest supervisor
+  frontier, only question, forbidden actions, and promotion gate without
+  rewriting historical ledger evidence
+- `project_task_workflow.py` creates and validates lightweight repository-local
+  task packs under `.codex/tasks/`, with a separate confirmation step before
+  implementation can start
 - Shared Codex-home test fixtures and split context-firewall surface tests, so
   layout tests no longer own every control-plane surface fixture directly
 - Canonical harnesses currently cover:

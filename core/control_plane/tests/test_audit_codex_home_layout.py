@@ -250,6 +250,67 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertEqual(payload["surface"]["selector"], "shared_asset_bundle")
             self.assertIn("tool_only", payload["execution_modes"])
 
+    def test_policy_explain_for_compatibility_entrypoint(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            result = self.run_explain(root, "control_plane")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["surface"]["kind"], "compatibility_surface")
+            self.assertEqual(payload["surface"]["selector_type"], "compatibility_category")
+            self.assertEqual(payload["surface"]["selector"], "core")
+            self.assertEqual(
+                payload["execution_modes"],
+                ["preserve_only", "manual_review_only"],
+            )
+
+    def test_policy_explain_for_compatibility_target(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            result = self.run_explain(root, "core/control_plane")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["surface"]["kind"], "compatibility_target")
+            self.assertEqual(
+                payload["surface"]["compatibility_entrypoint"],
+                "control_plane",
+            )
+            self.assertEqual(payload["surface"]["selector"], "core")
+
+    def test_policy_doctor_for_project_compatibility_entrypoint(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            result = self.run_doctor(root, "sample_project_supervisor")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["surface"]["kind"], "compatibility_surface")
+            self.assertEqual(payload["surface"]["selector"], "project_assets")
+            self.assertEqual(payload["health_class"], "stable_preserve")
+
     def test_policy_doctor_for_history_surface(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir) / ".codex"
@@ -325,12 +386,14 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertEqual(
                 payload["summary"]["total_surfaces"],
                 len(manifest["core_surfaces"])
+                + len(manifest["compatibility_surfaces"])
                 + len(manifest["runtime_surfaces"])
                 + len(manifest["history_surfaces"])
                 + len(manifest["project_namespaces"]),
             )
             self.assertEqual(payload["targets"], payload["surfaces"])
             targets = [entry["target"] for entry in payload["surfaces"]]
+            self.assertIn("control_plane", targets)
             self.assertIn("tmp", targets)
             self.assertIn("goals_1.sqlite", targets)
             self.assertIn("project_assets/shared_imports", targets)
@@ -480,10 +543,10 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertEqual(payload["layout_version"], manifest["layout_version"])
             self.assertEqual(payload["group"]["group_id"], "archive_governed")
-            self.assertEqual(payload["summary"]["total_targets"], 8)
+            self.assertEqual(payload["summary"]["total_targets"], 10)
             self.assertEqual(
                 payload["summary"]["by_scope"],
-                {"history_surface": 4, "namespace_surface": 4},
+                {"history_surface": 6, "namespace_surface": 4},
             )
             self.assertEqual(payload["summary"]["targets_with_mirror_continuity"], 3)
             self.assertEqual(
@@ -505,23 +568,31 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
                 ["session_index.jsonl"],
             )
             config_snapshot = targets[
-                "config.toml.example-snapshot"
+                "config.toml.before-openai-login.20260428-134805"
             ]
             self.assertEqual(
                 config_snapshot["rewrite_policy"],
                 "do_not_modify_in_place",
             )
-            example_project = targets["project_assets/example_project"]
-            self.assertEqual(example_project["scope"], "namespace_surface")
+            self.assertEqual(
+                targets["state_5.sqlite.bak_20260604_2110"]["archive_bias"],
+                "frozen_evidence_first",
+            )
+            self.assertEqual(
+                targets["state_5.sqlite.bak_ui_probe_20260605_054407"]["archive_bias"],
+                "frozen_evidence_first",
+            )
+            sample_project = targets["project_assets/sample_project"]
+            self.assertEqual(sample_project["scope"], "namespace_surface")
             compat_paths = [
                 item["path"]
-                for item in example_project["compatibility_entrypoints"]
+                for item in sample_project["compatibility_entrypoints"]
             ]
             self.assertEqual(
                 compat_paths,
-                ["example_project_supervisor", "example_worktree_snapshots"],
+                ["sample_project_supervisor", "worktree_snapshots"],
             )
-            self.assertEqual(example_project["namespace_type"], "project_overlay")
+            self.assertEqual(sample_project["namespace_type"], "project_overlay")
             preserve_only = {
                 item["target"]
                 for item in payload["preserve_only_history_surfaces"]
@@ -531,6 +602,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
                 {
                     "archived_sessions",
                     "attachments",
+                    "session_index.jsonl.bak_20260604_2109",
                     "session_index.jsonl",
                     "sessions_archive",
                 },
@@ -619,18 +691,18 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
                 "generated_for_layout_version": manifest["layout_version"],
                 "candidates": [
                     {
-                        "id": "reference_mirrors_example_phase1",
+                        "id": "reference_mirrors_upstream_audit_phase14",
                         "selector_type": "namespace_type",
                         "selector": "reference_bundle",
                         "target": "project_assets/reference_mirrors",
                         "candidate_kind": "compatibility_preserving_namespace_archive_candidate",
-                        "phase": "portable_phase1",
-                        "scope_root": "project_assets/reference_mirrors/reference_mirror_example",
-                        "compatibility_entrypoints": ["reference_mirror_example"],
+                        "phase": "phase14",
+                        "scope_root": "project_assets/reference_mirrors/upstream_audit",
+                        "compatibility_entrypoints": ["upstream_audit"],
                         "protected_paths": [
                             "project_assets/reference_mirrors",
-                            "project_assets/reference_mirrors/reference_mirror_example",
-                            "reference_mirror_example",
+                            "project_assets/reference_mirrors/upstream_audit",
+                            "upstream_audit",
                         ],
                         "preconditions": ["fixture"],
                         "planned_steps": ["fixture"],
@@ -651,7 +723,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["total_candidates"], 1)
             self.assertEqual(
                 payload["summary"]["candidate_ids"],
-                ["reference_mirrors_example_phase1"],
+                ["reference_mirrors_upstream_audit_phase14"],
             )
             self.assertTrue(payload["summary"]["all_compatibility_entrypoints_resolve"])
             candidate = payload["candidates"][0]
@@ -662,7 +734,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertTrue(candidate["all_compatibility_entrypoints_resolve"])
             self.assertEqual(
                 candidate["compatibility_status"][0]["path"],
-                "reference_mirror_example",
+                "upstream_audit",
             )
 
     def test_migration_candidate_wrong_compatibility_target_fails(self):
@@ -680,7 +752,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
 
             contract_path = root / "core/control_plane/codex_home_migration_candidates.json"
             contract = json.loads(contract_path.read_text(encoding="utf-8"))
-            contract["candidates"][0]["scope_root"] = "project_assets/reference_mirrors/not_example"
+            contract["candidates"][0]["scope_root"] = "project_assets/reference_mirrors/not_upstream"
             contract_path.write_text(json.dumps(contract, indent=2), encoding="utf-8")
 
             result = self.run_audit(root, manifest_path, config_path)
@@ -689,11 +761,11 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertFalse(payload["ok"])
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
             self.assertIn(
-                "migration_candidates:scope_root:reference_mirrors_example_phase1",
+                "migration_candidates:scope_root:reference_mirrors_upstream_audit_phase14",
                 failed,
             )
             self.assertIn(
-                "migration_candidates:compat_target:reference_mirrors_example_phase1:reference_mirror_example",
+                "migration_candidates:compat_target:reference_mirrors_upstream_audit_phase14:upstream_audit",
                 failed,
             )
 
@@ -714,7 +786,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             contract = json.loads(contract_path.read_text(encoding="utf-8"))
             contract["candidates"][0]["protected_paths"] = [
                 "project_assets/reference_mirrors",
-                "project_assets/reference_mirrors/reference_mirror_example",
+                "project_assets/reference_mirrors/upstream_audit",
             ]
             contract_path.write_text(json.dumps(contract, indent=2), encoding="utf-8")
 
@@ -724,7 +796,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertFalse(payload["ok"])
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
             self.assertIn(
-                "migration_candidates:compat_protected:reference_mirrors_example_phase1:reference_mirror_example",
+                "migration_candidates:compat_protected:reference_mirrors_upstream_audit_phase14:upstream_audit",
                 failed,
             )
 
@@ -735,9 +807,9 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
             manifest["home_root"] = root.as_posix()
             _materialize_layout(root, manifest)
-            bad_link = root / "example_project_supervisor"
+            bad_link = root / "sample_project_supervisor"
             bad_link.unlink()
-            bad_link.symlink_to("project_assets/example_project/not_supervisor")
+            bad_link.symlink_to("project_assets/sample_project/not_supervisor")
             manifest_path = root / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
             config_path = root / "config.toml"
@@ -749,7 +821,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertFalse(payload["ok"])
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
-            self.assertIn("compat:example_project_supervisor", failed)
+            self.assertIn("compat:sample_project_supervisor", failed)
 
     def test_forbidden_trusted_project_prefix_fails(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1040,7 +1112,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertFalse(payload["ok"])
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
             self.assertIn(
-                "history_snapshot_policy:snapshot_kind:config.toml.example-snapshot",
+                "history_snapshot_policy:snapshot_kind:config.toml.before-openai-login.20260428-134805",
                 failed,
             )
 
@@ -1333,6 +1405,155 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             self.assertFalse(payload["ok"])
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
             self.assertIn("namespace_registry:json", failed)
+
+    def test_supervisor_workflow_protocol_gate_missing_phrase_fails(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            protocol_path = (
+                root
+                / "project_assets/codex_home/supervisor/child_execution_protocol.md"
+            )
+            text = protocol_path.read_text(encoding="utf-8")
+            text = text.replace(
+                "No formal run and no new patch unless both:\n",
+                "",
+            )
+            protocol_path.write_text(text, encoding="utf-8")
+
+            result = self.run_audit(root, manifest_path, config_path)
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            failed = [check["name"] for check in payload["checks"] if not check["ok"]]
+            self.assertIn("supervisor_workflow:pack:codex_home:protocol_gate", failed)
+
+    def test_supervisor_workflow_only_question_missing_marker_fails(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            ledger_path = root / "project_assets/codex_home/supervisor/supervisor_ledger.md"
+            text = ledger_path.read_text(encoding="utf-8")
+            text = text.replace(
+                "- Decide whether to pilot the workflow in a real target repo without copying Trellis.\n",
+                "- fixture\n",
+            )
+            ledger_path.write_text(text, encoding="utf-8")
+
+            result = self.run_audit(root, manifest_path, config_path)
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            failed = [check["name"] for check in payload["checks"] if not check["ok"]]
+            self.assertIn(
+                "supervisor_workflow:pack:codex_home:only_question_required_markers",
+                failed,
+            )
+
+    def test_supervisor_workflow_forbidden_section_stale_marker_fails(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            ledger_path = root / "project_assets/codex_home/supervisor/supervisor_ledger.md"
+            text = ledger_path.read_text(encoding="utf-8")
+            text = text.replace(
+                "- No destructive changes.\n",
+                "- No destructive changes.\n- Do not drift back to layout governance.\n",
+            )
+            ledger_path.write_text(text, encoding="utf-8")
+
+            result = self.run_audit(root, manifest_path, config_path)
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            failed = [check["name"] for check in payload["checks"] if not check["ok"]]
+            self.assertIn(
+                "supervisor_workflow:pack:codex_home:forbidden_next_round_no_stale_markers",
+                failed,
+            )
+
+    def test_supervisor_workflow_promotion_gate_stale_marker_fails(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            ledger_path = root / "project_assets/codex_home/supervisor/supervisor_ledger.md"
+            text = ledger_path.read_text(encoding="utf-8")
+            text = text.replace(
+                "- project_task_workflow_smoke, layout audit, context-firewall audit, and default acceptance stay green.\n",
+                (
+                    "- project_task_workflow_smoke, layout audit, context-firewall audit, and default acceptance stay green.\n"
+                    "- a second bounded migration candidate is specified.\n"
+                ),
+            )
+            ledger_path.write_text(text, encoding="utf-8")
+
+            result = self.run_audit(root, manifest_path, config_path)
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            failed = [check["name"] for check in payload["checks"] if not check["ok"]]
+            self.assertIn(
+                "supervisor_workflow:pack:codex_home:promotion_gate_no_stale_markers",
+                failed,
+            )
+
+    def test_project_task_workflow_missing_creation_boundary_fails(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            manifest_path = root / "manifest.json"
+            manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+            config_path = root / "config.toml"
+            _write_config(config_path)
+            _write_root_index(root)
+
+            workflow_doc = root / "core/control_plane/project_task_workflow.md"
+            text = workflow_doc.read_text(encoding="utf-8")
+            workflow_doc.write_text(
+                text.replace("Creating a task records planning state only", ""),
+                encoding="utf-8",
+            )
+
+            result = self.run_audit(root, manifest_path, config_path)
+            self.assertEqual(result.returncode, 1)
+            payload = json.loads(result.stdout)
+            failed = [check["name"] for check in payload["checks"] if not check["ok"]]
+            self.assertIn("project_task_workflow:doc_contract", failed)
 
 
 if __name__ == "__main__":

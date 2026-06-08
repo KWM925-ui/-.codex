@@ -1,44 +1,44 @@
 {
   "schema_version": 1,
-  "generated_for_layout_version": "portable-2026-06-04.phase1",
+  "generated_for_layout_version": "2026-05-11.phase18",
   "candidates": [
     {
-      "id": "reference_mirrors_example_phase1",
+      "id": "reference_mirrors_upstream_audit_phase14",
       "selector_type": "namespace_type",
       "selector": "reference_bundle",
       "target": "project_assets/reference_mirrors",
       "candidate_kind": "compatibility_preserving_namespace_archive_candidate",
-      "phase": "portable_phase1",
-      "scope_root": "project_assets/reference_mirrors/reference_mirror_example",
+      "phase": "phase14",
+      "scope_root": "project_assets/reference_mirrors/upstream_audit",
       "compatibility_entrypoints": [
-        "reference_mirror_example"
+        "upstream_audit"
       ],
       "protected_paths": [
         "project_assets/reference_mirrors",
-        "project_assets/reference_mirrors/reference_mirror_example",
-        "reference_mirror_example"
+        "project_assets/reference_mirrors/upstream_audit",
+        "upstream_audit"
       ],
       "preconditions": [
         "No physical move of the authoritative reference mirror tree in the current phase.",
-        "The root compatibility entrypoint reference_mirror_example must continue to resolve to the namespace-owned example mirror tree.",
+        "The root compatibility entrypoint upstream_audit must continue to resolve to the namespace-owned upstream_audit tree.",
         "Namespace registry, manifest, and migration candidate contract must stay version-aligned before any future move candidate is promoted.",
         "Reference provenance and bundle identity must remain intact across any future archive handling."
       ],
       "planned_steps": [
-        "Treat project_assets/reference_mirrors/reference_mirror_example as the example namespace anchor for reference mirror bundles.",
-        "Preserve the root reference_mirror_example symlink unchanged as the required compatibility entrypoint for this sample contract.",
-        "Keep reference subtrees namespaced under the reference_mirrors root; do not flatten per-repository mirrors into new top-level paths.",
-        "If a later phase introduces deeper archive partitioning, update contracts and keep compatibility entrypoints resolving through a compatibility layer."
+        "Treat project_assets/reference_mirrors/upstream_audit as the sole authoritative namespace anchor for the mirror bundle.",
+        "Preserve the root upstream_audit symlink unchanged as the only required compatibility entrypoint in this phase.",
+        "Keep upstream subtrees namespaced under the existing upstream_audit root; do not flatten per-repository mirrors into new top-level paths.",
+        "If a later phase introduces deeper archive partitioning, update contracts and keep upstream_audit resolving through a compatibility layer."
       ],
       "forbidden_actions": [
-        "No destructive cleanup of mirrored reference repositories.",
-        "No removal or repointing of the reference_mirror_example compatibility symlink in the current phase.",
-        "No in-place rewriting of mirrored reference repositories only to normalize layout.",
+        "No destructive cleanup of mirrored upstream repositories.",
+        "No removal or repointing of the upstream_audit compatibility symlink in the current phase.",
+        "No in-place rewriting of mirrored upstream repositories only to normalize layout.",
         "No introduction of new root-level reference-mirror trees outside project_assets/reference_mirrors."
       ],
       "validation_commands": [
-        "python3 core/control_plane/scripts/audit_codex_home_layout.py --root \"$CODEX_HOME\"",
-        "python3 core/control_plane/scripts/review_archive_governed_targets.py --root \"$CODEX_HOME\""
+        "python3 /home/example/.codex/core/control_plane/scripts/audit_codex_home_layout.py",
+        "python3 /home/example/.codex/core/control_plane/scripts/review_archive_governed_targets.py"
       ]
     }
   ]

@@ -51,7 +51,7 @@ changes can distinguish stable principles from local improvisation.
 - Generic patterns have been extracted from local long-running sessions and
   historical project control docs.
 - The raw project-scoped source list and extracted notes now live under:
-  - `private project_assets/<project>/control_plane_cases/design_source_extractions.md`
+  - `~/.codex/project_assets/sample_project/control_plane_cases/design_source_extractions.md`
 - That case file preserves the original session and project-document anchors
   without polluting the global control-plane document.
 

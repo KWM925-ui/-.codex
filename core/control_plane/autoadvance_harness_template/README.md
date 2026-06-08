@@ -15,7 +15,7 @@ The template uses `__HARNESS_ROOT__` placeholders. Materialize a fresh runnable
 case with:
 
 ```bash
-$CODEX_HOME/core/control_plane/scripts/materialize_autoadvance_harness.sh /tmp/my_case
+/home/example/.codex/control_plane/scripts/materialize_autoadvance_harness.sh /tmp/my_case
 ```
 
 Then run a one-shot regression manually:
@@ -27,5 +27,5 @@ codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral --color never 
 Or run the batch regression:
 
 ```bash
-$CODEX_HOME/core/control_plane/scripts/run_autoadvance_regression.sh 3
+/home/example/.codex/control_plane/scripts/run_autoadvance_regression.sh 3
 ```

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
-DEFAULT_ROOT = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")).expanduser()
+DEFAULT_ROOT = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
 
 
 def load_json(path: Path) -> Dict[str, Any]:
@@ -74,6 +74,17 @@ def find_surface(
                     "source": key,
                 }
 
+    for surface in manifest.get("compatibility_surfaces", []):
+        if normalized == surface["path"]:
+            return {
+                "kind": "compatibility_surface",
+                "path": surface["path"],
+                "expected_target": surface.get("expected_target", ""),
+                "selector_type": "compatibility_category",
+                "selector": surface.get("category", "compatibility"),
+                "source": "compatibility_surfaces",
+            }
+
     namespace_type = namespace_type_from_path(normalized, registry)
     if namespace_type is not None:
         return {
@@ -83,6 +94,17 @@ def find_surface(
             "selector": namespace_type,
             "source": "project_assets",
         }
+
+    for surface in manifest.get("compatibility_surfaces", []):
+        if normalized == surface.get("expected_target", ""):
+            return {
+                "kind": "compatibility_target",
+                "path": surface.get("expected_target", ""),
+                "compatibility_entrypoint": surface["path"],
+                "selector_type": "compatibility_category",
+                "selector": surface.get("category", "compatibility"),
+                "source": "compatibility_surfaces",
+            }
     raise KeyError(
         "surface is not governed by the codex home contracts: %s" % target
     )
@@ -184,6 +206,10 @@ def governed_targets(root: Path) -> List[str]:
     for key in ("core_surfaces", "runtime_surfaces", "history_surfaces"):
         for surface in manifest.get(key, []):
             targets.append(surface["root_path"])
+    for surface in manifest.get("compatibility_surfaces", []):
+        path = surface.get("path")
+        if isinstance(path, str) and path:
+            targets.append(path)
     for namespace in namespace_registry.get("namespaces", []):
         path = namespace.get("path")
         if isinstance(path, str) and path:

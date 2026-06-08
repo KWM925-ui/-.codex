@@ -63,37 +63,37 @@ that:
 Audit the contracts:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/audit_context_firewall.py
+python3 /home/example/.codex/core/control_plane/scripts/audit_context_firewall.py
 ```
 
 Review the governed posture without reading session contents:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/review_context_firewall.py
+python3 /home/example/.codex/core/control_plane/scripts/review_context_firewall.py
 ```
 
 Probe the newest session in report-only mode:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/probe_context_ingress.py
+python3 /home/example/.codex/core/control_plane/scripts/probe_context_ingress.py
 ```
 
 Compare strict, balanced, and exploratory behavior on the same redacted probe:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/compare_context_profiles.py
+python3 /home/example/.codex/core/control_plane/scripts/compare_context_profiles.py
 ```
 
 Evaluate multiple redacted probes before changing policy strength:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/evaluate_context_profiles.py
+python3 /home/example/.codex/core/control_plane/scripts/evaluate_context_profiles.py
 ```
 
 Suggest a redacted curated-context plan without emitting raw content:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/suggest_curated_context.py \
+python3 /home/example/.codex/core/control_plane/scripts/suggest_curated_context.py \
   --input /path/to/context_items.json \
   --profile balanced \
   --json
@@ -102,7 +102,7 @@ python3 $CODEX_HOME/core/control_plane/scripts/suggest_curated_context.py \
 Build a curated context bundle from a JSON payload:
 
 ```bash
-python3 $CODEX_HOME/core/control_plane/scripts/build_curated_context.py \
+python3 /home/example/.codex/core/control_plane/scripts/build_curated_context.py \
   --input /path/to/context_items.json \
   --profile balanced \
   --json

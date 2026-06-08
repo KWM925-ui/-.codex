@@ -1,9 +1,13 @@
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
-CONTROL_PLANE_DIR = Path(__file__).resolve().parents[1]
+os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
+
+THIS_DIR = Path(__file__).resolve().parent
+CONTROL_PLANE_DIR = THIS_DIR.parent
 SCRIPTS_DIR = CONTROL_PLANE_DIR / "scripts"
 
 SCRIPT = SCRIPTS_DIR / "audit_codex_home_layout.py"
@@ -40,6 +44,128 @@ def _write_file(path: Path, content: str = "x\n") -> None:
 def _write_required_scripts(root: Path, manifest: dict) -> None:
     for script_path in manifest.get("required_scripts", []):
         _write_file(root / script_path, "#!/usr/bin/env python3\n")
+
+
+def _write_supervisor_workflow_fixture(root: Path, manifest: dict) -> None:
+    contract = manifest.get("supervisor_workflow_contract", {})
+    if not contract:
+        return
+
+    _write_file(
+        root / contract["skill_path"],
+        (
+            "---\n"
+            "name: execution-supervisor\n"
+            "description: live frontier or ledger with strict facts-vs-hypotheses separation.\n"
+            "---\n"
+            "Do not run formal experiments or write new patches unless the ledger and the phase gate both explicitly allow it.\n"
+            "Treat the ledger as the live source of truth.\n"
+        ),
+    )
+    for relpath in contract.get("required_skill_references", []):
+        _write_file(root / relpath, "workflow reference\n")
+
+    phases = "\n\n".join(
+        "### `%s: Fixture Phase`\nGoal:\n- fixture\nPromotion rule:\n- fixture"
+        % phase
+        for phase in contract.get("required_state_phases", [])
+    )
+    for pack in contract.get("live_packs", []):
+        pack_root = root / pack["path"]
+        for filename in contract.get("required_pack_files", []):
+            _write_file(pack_root / filename, "fixture\n")
+        _write_file(
+            pack_root / "supervisor_ledger.md",
+            (
+                "# Fixture Supervisor Ledger\n\n"
+                "## Locked Facts\n\n"
+                "- agent end-to-end workflow is the current objective.\n"
+                "- minimal isolated Codex home is audited.\n\n"
+                "## Newly Locked This Round\n\n"
+                "- fixture\n\n"
+                "## Newly Demoted This Round\n\n"
+                "- fixture\n\n"
+                "## Current Frontier\n\n"
+                "- Harden the project-local task workflow through project_task_workflow.py with --confirm-plan-reviewed gating.\n\n"
+                "## Only Question Next Round\n\n"
+                "- Decide whether to pilot the workflow in a real target repo without copying Trellis.\n\n"
+                "## Forbidden Next Round\n\n"
+                "- No destructive changes.\n\n"
+                "## Promotion Gate\n\n"
+                "- project_task_workflow_smoke, layout audit, context-firewall audit, and default acceptance stay green.\n"
+            ),
+        )
+        _write_file(
+            pack_root / "state_machine.md",
+            (
+                "# Supervisor State Machine\n\n"
+                "%s\n\n"
+                "## Current Phase\n\n"
+                "Current phase: `S4`\n"
+            )
+            % phases,
+        )
+        _write_file(
+            pack_root / "child_execution_protocol.md",
+            (
+                "# Child Execution Protocol\n\n"
+                "Solve only the ledger's current question.\n"
+                "No formal run and no new patch unless both:\n"
+                "- the phase allows it\n"
+                "- and the ledger explicitly allows it\n"
+            ),
+        )
+        _write_file(
+            pack_root / "round_self_checklist.md",
+            (
+                "# Round Self-Checklist\n\n"
+                "- Did I reopen a ruled-out chain?\n"
+                "- Did I drift from the current frontier?\n"
+                "- Did I write a hypothesis as a fact?\n"
+                "- Promotion Gate\n"
+            ),
+        )
+
+
+def _write_project_task_workflow_fixture(root: Path, manifest: dict) -> None:
+    contract = manifest.get("project_task_workflow_contract", {})
+    if not contract:
+        return
+
+    command_lines = "\n".join(
+        'subparsers.add_parser("%s")' % command
+        for command in contract.get("required_commands", [])
+    )
+    status_lines = "\n".join(contract.get("required_statuses", []))
+    artifact_lines = "\n".join(contract.get("required_artifacts", []))
+    _write_file(
+        root / contract["script_path"],
+        (
+            "#!/usr/bin/env python3\n"
+            "WORKFLOW_KIND = \"codex_project_task\"\n"
+            "TASKS_DIR = \".codex/tasks\"\n"
+            "SESSION_DIR = \".codex/task_runtime/sessions\"\n"
+            "# --confirm-plan-reviewed\n"
+            "# source-like file is not allowed in context manifests\n"
+            "%s\n%s\n%s\n"
+        )
+        % (command_lines, status_lines, artifact_lines),
+    )
+    _write_file(
+        root / contract["workflow_doc"],
+        (
+            "Creating a task records planning state only\n"
+            "Starting implementation is a separate step\n"
+            "User consent to create a task does not imply user consent to start implementation\n"
+            "stable context references only\n"
+            ".codex/tasks\n"
+            ".codex/task_runtime/sessions\n"
+            "%s\n"
+        )
+        % artifact_lines,
+    )
+    for relpath in contract.get("template_paths", []):
+        _write_file(root / relpath, "project task workflow template\n")
 
 
 def _write_root_index(root: Path) -> None:
@@ -82,7 +208,7 @@ def _write_root_index(root: Path) -> None:
 def _write_namespace_registry(root: Path, manifest: dict) -> None:
     namespace_types = {
         "codex_home": "productization_workspace",
-        "example_project": "project_overlay",
+        "sample_project": "project_overlay",
         "system_cleanup": "project_overlay",
         "reference_mirrors": "reference_bundle",
         "shared_imports": "shared_asset_bundle",
@@ -157,20 +283,26 @@ def _write_surface_registry(
                 "sessions_archive": "sessions_archive",
                 "archived_sessions": "archived_sessions",
                 "session_index.jsonl": "index",
+                "session_index.jsonl.bak_20260604_2109": "index",
+                "state_5.sqlite.bak_20260604_2110": "config_snapshot",
+                "state_5.sqlite.bak_ui_probe_20260605_054407": "config_snapshot",
                 "memories": "memory",
                 "attachments": "attachments",
                 "shell_snapshots": "shell_snapshots",
-                "config.toml.example-snapshot": "config_snapshot",
+                "config.toml.before-openai-login.20260428-134805": "config_snapshot",
             }
             history_retention_roles = {
                 "sessions": "active rollout history",
                 "sessions_archive": "archived rollout history",
                 "archived_sessions": "legacy archive store",
                 "session_index.jsonl": "lookup/index surface",
+                "session_index.jsonl.bak_20260604_2109": "local session-index backup preserved as history evidence",
+                "state_5.sqlite.bak_20260604_2110": "local runtime-state backup preserved as reversible evidence",
+                "state_5.sqlite.bak_ui_probe_20260605_054407": "local UI probe runtime-state backup preserved as reversible evidence",
                 "memories": "generated memory store",
                 "attachments": "uploaded attachment evidence and pasted-text metadata",
                 "shell_snapshots": "TTY/shell continuation evidence",
-                "config.toml.example-snapshot": "historical config snapshot preserved as evidence",
+                "config.toml.before-openai-login.20260428-134805": "historical config snapshot preserved as evidence",
             }
             category = history_categories[root_path]
 
@@ -225,7 +357,7 @@ def _write_namespace_standards(root: Path, manifest: dict) -> None:
                 ],
                 "allow_compatibility_entrypoints": False,
             }
-        elif namespace_id in {"example_project", "system_cleanup"}:
+        elif namespace_id in {"sample_project", "system_cleanup"}:
             namespace_types[namespace_id] = {
                 "type": "project_overlay",
                 "required_subsurface_prefixes": [
@@ -237,7 +369,7 @@ def _write_namespace_standards(root: Path, manifest: dict) -> None:
             namespace_types[namespace_id] = {
                 "type": "reference_bundle",
                 "required_subsurface_prefixes": [
-                    "reference_mirror_example"
+                    "upstream_audit"
                 ],
                 "allow_compatibility_entrypoints": True,
             }
@@ -329,6 +461,8 @@ def _write_operations_policy(root: Path, manifest: dict) -> None:
             {"selector_type": "core_category", "selector": "global_map", "allowed_actions": ["preserve", "manual_review"]},
             {"selector_type": "core_category", "selector": "home_summary", "allowed_actions": ["preserve", "manual_review"]},
             {"selector_type": "core_category", "selector": "config_live", "allowed_actions": ["preserve", "manual_review"]},
+            {"selector_type": "compatibility_category", "selector": "core", "allowed_actions": ["preserve", "manual_review"]},
+            {"selector_type": "compatibility_category", "selector": "project_assets", "allowed_actions": ["preserve", "manual_review"]},
             {"selector_type": "runtime_category", "selector": "cache", "allowed_actions": ["preserve", "quarantine", "rotate", "manual_review"]},
             {"selector_type": "runtime_category", "selector": "state", "allowed_actions": ["preserve", "manual_review"]},
             {"selector_type": "runtime_category", "selector": "temp", "allowed_actions": ["preserve", "quarantine", "rotate", "manual_review"]},
@@ -369,6 +503,8 @@ def _write_execution_mode_policy(root: Path, manifest: dict) -> None:
             {"selector_type": "core_category", "selector": "global_map", "execution_modes": ["preserve_only", "manual_review_only"]},
             {"selector_type": "core_category", "selector": "home_summary", "execution_modes": ["preserve_only", "manual_review_only"]},
             {"selector_type": "core_category", "selector": "config_live", "execution_modes": ["preserve_only", "manual_review_only"]},
+            {"selector_type": "compatibility_category", "selector": "core", "execution_modes": ["preserve_only", "manual_review_only"]},
+            {"selector_type": "compatibility_category", "selector": "project_assets", "execution_modes": ["preserve_only", "manual_review_only"]},
             {"selector_type": "runtime_category", "selector": "cache", "execution_modes": ["reversible_only", "rotation_allowed", "manual_review_only"]},
             {"selector_type": "runtime_category", "selector": "state", "execution_modes": ["preserve_only", "manual_review_only"]},
             {"selector_type": "runtime_category", "selector": "temp", "execution_modes": ["reversible_only", "rotation_allowed", "manual_review_only"]},
@@ -732,6 +868,8 @@ def _materialize_layout(root: Path, manifest: dict) -> None:
     for doc_path in manifest["required_docs"]:
         _write_file(root / doc_path, "doc\n")
     _write_required_scripts(root, manifest)
+    _write_supervisor_workflow_fixture(root, manifest)
+    _write_project_task_workflow_fixture(root, manifest)
 
     for namespace in manifest["project_namespaces"]:
         (root / namespace["path"]).mkdir(parents=True, exist_ok=True)
@@ -768,8 +906,13 @@ def _materialize_layout(root: Path, manifest: dict) -> None:
 
 def _write_config(path: Path, extra_project_key: str = "") -> None:
     projects = [
-        "/workspace/example-repo",
-        "/workspace/control-plane",
+        "/home/example",
+        "/home/example/.codex",
+        "/home/example/codex_autoadvance_harness",
+        "/home/example/example_ws",
+        "/home/example/example_follow_ws",
+        "/home/example/sample_project_ws",
+        "/home/example/example_sim",
     ]
     if extra_project_key:
         projects.append(extra_project_key)
