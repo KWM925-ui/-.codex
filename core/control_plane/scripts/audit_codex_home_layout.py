@@ -1735,6 +1735,19 @@ def _audit_section_contains_all(
     )
 
 
+def _audit_section_nonempty(section_text: str, label: str) -> CheckResult:
+    lines = [
+        line.strip()
+        for line in section_text.splitlines()
+        if line.strip() and not line.strip().startswith("## ")
+    ]
+    return CheckResult(
+        label,
+        bool(lines),
+        "section has content" if lines else "section is empty",
+    )
+
+
 def _audit_section_excludes_all(
     section_text: str,
     label: str,
@@ -1895,16 +1908,31 @@ def _audit_supervisor_workflow_contract(
                 ),
             )
         )
+        current_frontier_text = _current_frontier_text(ledger_text)
+        only_question_text = _ledger_section_text(ledger_text, "Only Question Next Round")
+        promotion_gate_text = _ledger_section_text(ledger_text, "Promotion Gate")
+        checks.append(
+            _audit_section_nonempty(
+                current_frontier_text,
+                "%s:current_frontier_nonempty" % pack_label,
+            )
+        )
         checks.append(
             _audit_section_contains_all(
-                _current_frontier_text(ledger_text),
+                current_frontier_text,
                 "%s:current_frontier_required_markers" % pack_label,
                 pack.get("current_frontier_required_markers", []),
             )
         )
         checks.append(
+            _audit_section_nonempty(
+                only_question_text,
+                "%s:only_question_nonempty" % pack_label,
+            )
+        )
+        checks.append(
             _audit_section_contains_all(
-                _ledger_section_text(ledger_text, "Only Question Next Round"),
+                only_question_text,
                 "%s:only_question_required_markers" % pack_label,
                 pack.get("only_question_required_markers", []),
             )
@@ -1917,15 +1945,21 @@ def _audit_supervisor_workflow_contract(
             )
         )
         checks.append(
+            _audit_section_nonempty(
+                promotion_gate_text,
+                "%s:promotion_gate_nonempty" % pack_label,
+            )
+        )
+        checks.append(
             _audit_section_contains_all(
-                _ledger_section_text(ledger_text, "Promotion Gate"),
+                promotion_gate_text,
                 "%s:promotion_gate_required_markers" % pack_label,
                 pack.get("promotion_gate_required_markers", []),
             )
         )
         checks.append(
             _audit_section_excludes_all(
-                _ledger_section_text(ledger_text, "Promotion Gate"),
+                promotion_gate_text,
                 "%s:promotion_gate_no_stale_markers" % pack_label,
                 pack.get("promotion_gate_forbidden_markers", []),
             )

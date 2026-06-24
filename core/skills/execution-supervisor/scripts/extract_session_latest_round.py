@@ -12,9 +12,24 @@ def truncate(text: str, limit: int) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Extract the latest completed round from a Codex session jsonl.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Extract metadata for the latest completed round from a Codex "
+            "session jsonl. Raw last-agent text is hidden unless explicitly requested."
+        )
+    )
     parser.add_argument("session", help="Path to the session jsonl.")
-    parser.add_argument("--chars", type=int, default=4000, help="Maximum characters for the rendered last message.")
+    parser.add_argument(
+        "--include-message",
+        action="store_true",
+        help="Also render the last agent message. Defaults to off to avoid transcript noise.",
+    )
+    parser.add_argument(
+        "--chars",
+        type=int,
+        default=4000,
+        help="Maximum characters when --include-message is used.",
+    )
     args = parser.parse_args()
 
     session = Path(args.session).expanduser().resolve()
@@ -50,8 +65,11 @@ def main() -> int:
         print(f"Completed at (epoch): {payload['completed_at']}")
     if "duration_ms" in payload:
         print(f"Duration ms: {payload['duration_ms']}")
-    print("Last agent message:")
-    print(truncate(last_agent_message, args.chars))
+    if args.include_message:
+        print("Last agent message:")
+        print(truncate(last_agent_message, args.chars))
+    else:
+        print("Last agent message: <hidden; pass --include-message to render>")
     return 0
 
 

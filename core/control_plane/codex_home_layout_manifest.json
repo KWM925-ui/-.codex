@@ -93,6 +93,7 @@
     "core/control_plane/scripts/agent_e2e_real_runner.py",
     "core/control_plane/scripts/run_agent_e2e_evals.py",
     "core/control_plane/scripts/run_codex_home_acceptance.py",
+    "core/control_plane/scripts/recover_codex_work_state.py",
     "core/control_plane/scripts/summarize_supervisor_current_state.py",
     "core/control_plane/scripts/project_task_workflow.py"
   ],
@@ -155,8 +156,8 @@
       "category": "core"
     },
     {
-      "path": "sample_project_supervisor",
-      "expected_target": "project_assets/sample_project/supervisor",
+      "path": "pandeng_supervisor",
+      "expected_target": "project_assets/pandeng/supervisor",
       "category": "project_assets"
     },
     {
@@ -171,7 +172,7 @@
     },
     {
       "path": "worktree_snapshots",
-      "expected_target": "project_assets/sample_project/evidence/worktree_snapshots",
+      "expected_target": "project_assets/pandeng/evidence/worktree_snapshots",
       "category": "project_assets"
     },
     {
@@ -647,26 +648,13 @@
           "agent end-to-end workflow",
           "minimal isolated Codex home"
         ],
-        "current_frontier_required_markers": [
-          "project-local task workflow",
-          "project_task_workflow.py",
-          "--confirm-plan-reviewed"
-        ],
-        "only_question_required_markers": [
-          "pilot",
-          "real target repo",
-          "without copying Trellis"
-        ],
+        "current_frontier_required_markers": [],
+        "only_question_required_markers": [],
         "forbidden_next_round_forbidden_markers": [
           "second bounded migration candidate",
           "layout governance"
         ],
-        "promotion_gate_required_markers": [
-          "project_task_workflow_smoke",
-          "layout audit",
-          "context-firewall audit",
-          "default acceptance"
-        ],
+        "promotion_gate_required_markers": [],
         "promotion_gate_forbidden_markers": [
           "second bounded migration candidate",
           "layout governance"
@@ -738,13 +726,13 @@
       ]
     },
     {
-      "id": "sample_project",
-      "path": "project_assets/sample_project",
+      "id": "pandeng",
+      "path": "project_assets/pandeng",
       "role": "project overlay, case evidence, and frozen worktree evidence",
       "required_paths": [
-        "project_assets/sample_project/supervisor",
-        "project_assets/sample_project/control_plane_cases",
-        "project_assets/sample_project/evidence"
+        "project_assets/pandeng/supervisor",
+        "project_assets/pandeng/control_plane_cases",
+        "project_assets/pandeng/evidence"
       ]
     },
     {
@@ -777,23 +765,24 @@
       "/home/example",
       "/home/example/.codex",
       "/home/example/codex_autoadvance_harness",
-      "/home/example/example_ws",
-      "/home/example/sample_project_ws",
-      "/home/example/example_sim"
+      "/home/example/ego-fast_ws",
+      "/home/example/pandeng_ws",
+      "/home/example/sim_plane"
     ],
     "allowed_optional_trusted_projects": [
-      "/home/example/example_paper_ws",
-      "/home/example/example_follow_ws",
-      "/home/example/example_j_ws",
-      "/home/example/downloads",
-      "/home/example/pictures",
-      "/media/coco/zl",
-      "/media/coco/zl/haimd",
-      "/media/coco/zl/makemoney",
-      "/media/coco/zl/project",
-      "/media/coco/zl/project1",
-      "/media/coco/zl/phototrans",
-      "/media/coco/zl/waste"
+      "/home/example/follower_paper_ws",
+      "/home/example/follwer_ws",
+      "/home/example/J_ws",
+      "/home/example/下载",
+      "/home/example/图片",
+      "/media/example/zl",
+      "/media/example/zl/haimd",
+      "/media/example/zl/makemoney",
+      "/media/example/zl/project",
+      "/media/example/zl/project（产品）",
+      "/media/example/zl/project1",
+      "/media/example/zl/phototrans",
+      "/media/example/zl/waste"
     ],
     "forbidden_exact_project_keys": [
       "/"

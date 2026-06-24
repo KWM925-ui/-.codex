@@ -208,7 +208,7 @@ def _write_root_index(root: Path) -> None:
 def _write_namespace_registry(root: Path, manifest: dict) -> None:
     namespace_types = {
         "codex_home": "productization_workspace",
-        "sample_project": "project_overlay",
+        "pandeng": "project_overlay",
         "system_cleanup": "project_overlay",
         "reference_mirrors": "reference_bundle",
         "shared_imports": "shared_asset_bundle",
@@ -357,7 +357,7 @@ def _write_namespace_standards(root: Path, manifest: dict) -> None:
                 ],
                 "allow_compatibility_entrypoints": False,
             }
-        elif namespace_id in {"sample_project", "system_cleanup"}:
+        elif namespace_id in {"pandeng", "system_cleanup"}:
             namespace_types[namespace_id] = {
                 "type": "project_overlay",
                 "required_subsurface_prefixes": [
@@ -909,10 +909,10 @@ def _write_config(path: Path, extra_project_key: str = "") -> None:
         "/home/example",
         "/home/example/.codex",
         "/home/example/codex_autoadvance_harness",
-        "/home/example/example_ws",
-        "/home/example/example_follow_ws",
-        "/home/example/sample_project_ws",
-        "/home/example/example_sim",
+        "/home/example/ego-fast_ws",
+        "/home/example/follwer_ws",
+        "/home/example/pandeng_ws",
+        "/home/example/sim_plane",
     ]
     if extra_project_key:
         projects.append(extra_project_key)

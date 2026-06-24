@@ -304,7 +304,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             _write_config(config_path)
             _write_root_index(root)
 
-            result = self.run_doctor(root, "sample_project_supervisor")
+            result = self.run_doctor(root, "pandeng_supervisor")
             self.assertEqual(result.returncode, 0, result.stderr)
             payload = json.loads(result.stdout)
             self.assertEqual(payload["surface"]["kind"], "compatibility_surface")
@@ -582,17 +582,17 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
                 targets["state_5.sqlite.bak_ui_probe_20260605_054407"]["archive_bias"],
                 "frozen_evidence_first",
             )
-            sample_project = targets["project_assets/sample_project"]
-            self.assertEqual(sample_project["scope"], "namespace_surface")
+            pandeng = targets["project_assets/pandeng"]
+            self.assertEqual(pandeng["scope"], "namespace_surface")
             compat_paths = [
                 item["path"]
-                for item in sample_project["compatibility_entrypoints"]
+                for item in pandeng["compatibility_entrypoints"]
             ]
             self.assertEqual(
                 compat_paths,
-                ["sample_project_supervisor", "worktree_snapshots"],
+                ["pandeng_supervisor", "worktree_snapshots"],
             )
-            self.assertEqual(sample_project["namespace_type"], "project_overlay")
+            self.assertEqual(pandeng["namespace_type"], "project_overlay")
             preserve_only = {
                 item["target"]
                 for item in payload["preserve_only_history_surfaces"]
@@ -807,9 +807,9 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
             manifest["home_root"] = root.as_posix()
             _materialize_layout(root, manifest)
-            bad_link = root / "sample_project_supervisor"
+            bad_link = root / "pandeng_supervisor"
             bad_link.unlink()
-            bad_link.symlink_to("project_assets/sample_project/not_supervisor")
+            bad_link.symlink_to("project_assets/pandeng/not_supervisor")
             manifest_path = root / "manifest.json"
             manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
             config_path = root / "config.toml"
@@ -821,7 +821,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             self.assertFalse(payload["ok"])
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
-            self.assertIn("compat:sample_project_supervisor", failed)
+            self.assertIn("compat:pandeng_supervisor", failed)
 
     def test_forbidden_trusted_project_prefix_fails(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1436,7 +1436,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
             self.assertIn("supervisor_workflow:pack:codex_home:protocol_gate", failed)
 
-    def test_supervisor_workflow_only_question_missing_marker_fails(self):
+    def test_supervisor_workflow_only_question_empty_fails(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir) / ".codex"
             root.mkdir()
@@ -1453,7 +1453,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             text = ledger_path.read_text(encoding="utf-8")
             text = text.replace(
                 "- Decide whether to pilot the workflow in a real target repo without copying Trellis.\n",
-                "- fixture\n",
+                "",
             )
             ledger_path.write_text(text, encoding="utf-8")
 
@@ -1462,7 +1462,7 @@ class AuditCodexHomeLayoutTests(unittest.TestCase):
             payload = json.loads(result.stdout)
             failed = [check["name"] for check in payload["checks"] if not check["ok"]]
             self.assertIn(
-                "supervisor_workflow:pack:codex_home:only_question_required_markers",
+                "supervisor_workflow:pack:codex_home:only_question_nonempty",
                 failed,
             )
 

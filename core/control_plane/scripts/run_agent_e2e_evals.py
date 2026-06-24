@@ -29,8 +29,10 @@ from agent_e2e_common import (
     _noop_task_specs,
     _parse_strategy_list,
     _parse_task_id_list,
+    _restore_live_guard_files,
     _run_noop_strategy,
     _run_task_strategy,
+    _snapshot_live_guard_file_contents,
     _run_unittest,
     _score_plain_reply,
     _snapshot_live_guard_files,
@@ -1098,16 +1100,20 @@ def _regression_gate_eval(
     plain_language = _plain_language_eval()
     output_text = json.dumps(output_probe, ensure_ascii=False, sort_keys=True)
     leaked_marker_count = sum(1 for marker in FORBIDDEN_OUTPUT_MARKERS if marker in output_text)
-    ok = (
-        not failed_checks
-        and not changed_policy_files
-        and not changed_live_guard_files
-        and not temporary_trusted_projects
-        and temp_cleaned
-        and leaked_marker_count == 0
-        and fixed_json["ok"]
-        and fixed_session["ok"]
-        and plain_language["ok"]
+    ok = _regression_gate_payload_ok(
+        {
+            "contract_checks": {"failed": failed_checks},
+            "changed_policy_files": changed_policy_files,
+            "changed_live_guard_files": changed_live_guard_files,
+            "temporary_trusted_projects": {
+                "count": len(temporary_trusted_projects),
+            },
+            "temp_workspace_cleaned": temp_cleaned,
+            "raw_marker_leaks": leaked_marker_count,
+            "fixed_json_sample": fixed_json,
+            "fixed_session_sample": fixed_session,
+            "plain_language": plain_language,
+        }
     )
     return {
         "id": "regression_gate",
@@ -1134,6 +1140,20 @@ def _regression_gate_eval(
             "/home/example/.codex/core/control_plane/scripts/run_agent_e2e_evals.py --root /home/example/.codex"
         ),
     }
+
+
+def _regression_gate_payload_ok(entry: Dict[str, Any]) -> bool:
+    return (
+        not entry.get("contract_checks", {}).get("failed", [])
+        and not entry.get("changed_policy_files", [])
+        and not entry.get("changed_live_guard_files", [])
+        and entry.get("temporary_trusted_projects", {}).get("count", 0) == 0
+        and bool(entry.get("temp_workspace_cleaned", False))
+        and entry.get("raw_marker_leaks", 0) == 0
+        and bool(entry.get("fixed_json_sample", {}).get("ok", False))
+        and bool(entry.get("fixed_session_sample", {}).get("ok", False))
+        and bool(entry.get("plain_language", {}).get("ok", False))
+    )
 
 
 def _redacted_curation_summary(curated_payloads: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -1183,6 +1203,7 @@ def _run_evals(
 ) -> Dict[str, Any]:
     before_snapshot = _snapshot_policy_files(root)
     before_live_guard_snapshot = _snapshot_live_guard_files(root)
+    before_live_guard_contents = _snapshot_live_guard_file_contents(root)
     temp_dir_name = None
     sample_temp_root: Optional[Path] = None
     temp_root = Path(tempfile.mkdtemp(prefix=agent_e2e_temp_prefix()))
@@ -1363,10 +1384,16 @@ def _run_evals(
     finally:
         _remove_temp_tree_with_retries(temp_root)
     temp_cleaned = bool(temp_dir_name) and not Path(temp_dir_name).exists()
+    restored_live_guard_files = _restore_live_guard_files(
+        root,
+        before_live_guard_contents,
+    )
     after_snapshot = _snapshot_policy_files(root)
     after_live_guard_snapshot = _snapshot_live_guard_files(root)
     payload["privacy"]["temp_workspace_cleaned"] = temp_cleaned
+    payload["privacy"]["restored_live_guard_files"] = restored_live_guard_files
     payload["evals"][-1]["temp_workspace_cleaned"] = temp_cleaned
+    payload["evals"][-1]["restored_live_guard_files"] = restored_live_guard_files
     payload["evals"][-1]["changed_policy_files"] = [
         relpath
         for relpath, before in before_snapshot.items()
@@ -1382,14 +1409,13 @@ def _run_evals(
         "count": len(temporary_trusted_projects),
         "sample": temporary_trusted_projects[:10],
     }
-    if (
-        payload["evals"][-1]["changed_policy_files"]
-        or payload["evals"][-1]["changed_live_guard_files"]
-        or temporary_trusted_projects
-        or not temp_cleaned
-    ):
-        payload["evals"][-1]["ok"] = False
-        payload["ok"] = False
+    payload["evals"][-1]["ok"] = _regression_gate_payload_ok(payload["evals"][-1])
+    payload["evals"][-1]["plain_result"] = (
+        "结构、过滤、端到端、攻击样本和说人话检查都过了"
+        if payload["evals"][-1]["ok"]
+        else "回归闸门仍有失败项"
+    )
+    payload["ok"] = all(entry["ok"] for entry in payload["evals"])
 
     payload_text = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     leaked_marker_count = sum(1 for marker in FORBIDDEN_OUTPUT_MARKERS if marker in payload_text)

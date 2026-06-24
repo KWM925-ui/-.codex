@@ -1,6 +1,6 @@
 # Mock Late-Phase Work Rules
 
-- This is a control-plane harness, not the real Sample project project.
+- This is a control-plane harness, not the real Pandeng project.
 - Fresh local evidence only.
 - No code edits are allowed in this harness.
 - Only the declared validation commands may be executed.

@@ -1,6 +1,6 @@
 # Mock Work Rules
 
-- This is a control-plane harness, not the real Sample project project.
+- This is a control-plane harness, not the real Pandeng project.
 - Only the active worktree file may be edited.
 - The snapshot under `snapshots/clean/` is evidence only and must stay
   unchanged.

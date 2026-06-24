@@ -51,7 +51,7 @@ FORBIDDEN_ANYWHERE_DIRS = {
     "archived_sessions",
     "history",
     "memories",
-    "sample_project_supervisor",
+    "pandeng_supervisor",
     "project_assets",
     "runtime",
     "sessions",

@@ -21,6 +21,11 @@ from test_audit_codex_home_layout import (
 
 AGENT_E2E_EVAL_SCRIPT = SCRIPTS_DIR / "run_agent_e2e_evals.py"
 SUPERVISOR_SUMMARY_SCRIPT = SCRIPTS_DIR / "summarize_supervisor_current_state.py"
+RECOVERY_CARD_SCRIPT = SCRIPTS_DIR / "recover_codex_work_state.py"
+SESSION_EXTRACT_SCRIPT = (
+    CONTROL_PLANE_DIR.parent
+    / "skills/execution-supervisor/scripts/extract_session_latest_round.py"
+)
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -42,6 +47,11 @@ from agent_e2e_real_runner import (  # noqa: E402
     _safe_output_tail,
     _score_ambiguous_clarification,
 )
+from agent_e2e_common import (  # noqa: E402
+    _restore_live_guard_files,
+    _snapshot_live_guard_file_contents,
+)
+from run_agent_e2e_evals import _regression_gate_payload_ok  # noqa: E402
 
 
 class AgentE2EEvalTests(unittest.TestCase):
@@ -500,6 +510,7 @@ class AgentE2EEvalTests(unittest.TestCase):
             (pack / "supervisor_ledger.md").write_text(
                 (
                     "# Ledger\n\n"
+                    "## Round 2026-06-01 Old Work\n\n"
                     "## Current Frontier\n\n"
                     "- old frontier\n\n"
                     "## Only Question Next Round\n\n"
@@ -508,8 +519,9 @@ class AgentE2EEvalTests(unittest.TestCase):
                     "- old forbidden\n\n"
                     "## Promotion Gate\n\n"
                     "- old gate\n\n"
+                    "## Round 2026-06-19 Active Recovery\n\n"
                     "## Current Frontier\n\n"
-                    "- new frontier\n\n"
+                    "- Harden the recovery summary.\n\n"
                     "## Only Question Next Round\n\n"
                     "- new question\n\n"
                     "## Forbidden Next Round\n\n"
@@ -537,12 +549,244 @@ class AgentE2EEvalTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             payload = json.loads(result.stdout)
+            self.assertEqual(
+                payload["latest_round_heading"],
+                "Round 2026-06-19 Active Recovery",
+            )
             self.assertEqual(payload["current_phase"], "S8")
-            self.assertEqual(payload["current_frontier"], ["new frontier"])
+            self.assertEqual(payload["frontier_status"]["state"], "active")
+            self.assertIn("只处理这个边界", payload["frontier_status"]["plain_result"])
+            self.assertEqual(payload["current_frontier"], ["Harden the recovery summary."])
             self.assertEqual(payload["only_question"], ["new question"])
             self.assertEqual(payload["forbidden_next_round"], ["new forbidden"])
             self.assertEqual(payload["promotion_gate"], ["new gate"])
             self.assertEqual(payload["section_counts"]["current_frontier"], 2)
+
+    def test_supervisor_summary_marks_completed_frontier(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack = Path(tmpdir) / "supervisor"
+            pack.mkdir()
+            (pack / "supervisor_ledger.md").write_text(
+                (
+                    "# Ledger\n\n"
+                    "## Round 2026-06-19 Completed Work\n\n"
+                    "## Current Frontier\n\n"
+                    "- Saturation gate and targeted correction audit are complete.\n\n"
+                    "## Only Question Next Round\n\n"
+                    "- Choose a new bounded frontier.\n\n"
+                    "## Forbidden Next Round\n\n"
+                    "- No broad feature work.\n\n"
+                    "## Promotion Gate\n\n"
+                    "- Quick acceptance remains green.\n"
+                ),
+                encoding="utf-8",
+            )
+            (pack / "state_machine.md").write_text(
+                "## Current Phase\n\nCurrent phase: `S8`\n",
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SUPERVISOR_SUMMARY_SCRIPT),
+                    "--pack-root",
+                    str(pack),
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["frontier_status"]["state"], "complete")
+            self.assertIn("已经完成", payload["frontier_status"]["plain_result"])
+            self.assertEqual(
+                payload["latest_round_heading"],
+                "Round 2026-06-19 Completed Work",
+            )
+
+    def test_supervisor_summary_prefers_structured_recovery_state(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack = Path(tmpdir) / "supervisor"
+            pack.mkdir()
+            (pack / "supervisor_ledger.md").write_text(
+                (
+                    "# Ledger\n\n"
+                    "## Round 2026-06-19 Structured Active\n\n"
+                    "## Recovery State\n\n"
+                    "- `frontier_state: active`\n"
+                    "- `next_action: continue_current_frontier`\n\n"
+                    "## Current Frontier\n\n"
+                    "- This sentence says complete but the structured state says active.\n\n"
+                    "## Only Question Next Round\n\n"
+                    "- Continue the active branch.\n\n"
+                    "## Forbidden Next Round\n\n"
+                    "- No raw session text.\n\n"
+                    "## Promotion Gate\n\n"
+                    "- Recovery card stays green.\n"
+                ),
+                encoding="utf-8",
+            )
+            (pack / "state_machine.md").write_text(
+                "## Current Phase\n\nCurrent phase: `S8`\n",
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SUPERVISOR_SUMMARY_SCRIPT),
+                    "--pack-root",
+                    str(pack),
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["recovery_state"]["frontier_state"], "active")
+            self.assertEqual(payload["frontier_status"]["state"], "active")
+            self.assertEqual(payload["frontier_status"]["source"], "recovery_state")
+
+    def test_recovery_card_combines_supervisor_task_pointer_and_hygiene(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            manifest = json.loads(PROD_MANIFEST.read_text(encoding="utf-8"))
+            manifest["home_root"] = root.as_posix()
+            _materialize_layout(root, manifest)
+            _write_config(root / "config.toml")
+            _write_root_index(root)
+
+            pack = Path(tmpdir) / "supervisor"
+            pack.mkdir()
+            (pack / "supervisor_ledger.md").write_text(
+                (
+                    "# Ledger\n\n"
+                    "## Round 2026-06-19 Active Recovery\n\n"
+                    "## Recovery State\n\n"
+                    "- `frontier_state: active`\n"
+                    "- `next_action: continue_current_frontier`\n\n"
+                    "## Current Frontier\n\n"
+                    "- Continue current recovery test.\n\n"
+                    "## Only Question Next Round\n\n"
+                    "- Does recovery card work?\n\n"
+                    "## Forbidden Next Round\n\n"
+                    "- No raw session text.\n\n"
+                    "## Promotion Gate\n\n"
+                    "- Tests pass.\n"
+                ),
+                encoding="utf-8",
+            )
+            (pack / "state_machine.md").write_text(
+                "## Current Phase\n\nCurrent phase: `S8`\n",
+                encoding="utf-8",
+            )
+
+            project = Path(tmpdir) / "repo"
+            project.mkdir()
+            task_dir = project / ".codex/tasks/task-a"
+            task_dir.mkdir(parents=True)
+            (task_dir / "task.json").write_text(
+                json.dumps(
+                    {
+                        "workflow_kind": "codex_project_task",
+                        "status": "planning",
+                        "implementation_confirmed": False,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            session_dir = project / ".codex/task_runtime/sessions"
+            session_dir.mkdir(parents=True)
+            (session_dir / "session-a.json").write_text(
+                json.dumps(
+                    {
+                        "workflow_kind": "codex_project_task",
+                        "session_key": "session-a",
+                        "active_task": ".codex/tasks/task-a",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(RECOVERY_CARD_SCRIPT),
+                    "--root",
+                    str(root),
+                    "--pack-root",
+                    str(pack),
+                    "--project-root",
+                    str(project),
+                    "--session-key",
+                    "session-a",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            payload = json.loads(result.stdout)
+            self.assertTrue(payload["ok"])
+            self.assertTrue(payload["privacy"]["read_only"])
+            self.assertFalse(payload["privacy"]["raw_session_text_read"])
+            self.assertFalse(payload["privacy"]["raw_session_text_emitted"])
+            self.assertEqual(payload["supervisor"]["frontier_status"]["state"], "active")
+            self.assertEqual(payload["project_task"]["active_task"], ".codex/tasks/task-a")
+            self.assertEqual(payload["project_task"]["task_status"], "planning")
+            self.assertTrue(payload["hygiene"]["ok"])
+            self.assertIn("继续 supervisor 当前唯一边界", payload["next_action"])
+            self.assertNotIn("last_agent_message", result.stdout)
+
+    def test_session_latest_round_hides_message_by_default(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            session = Path(tmpdir) / "session.jsonl"
+            session.write_text(
+                json.dumps(
+                    {
+                        "type": "event_msg",
+                        "timestamp": "2026-06-19T00:00:00Z",
+                        "payload": {
+                            "type": "task_complete",
+                            "turn_id": "turn-a",
+                            "last_agent_message": "SECRET_SESSION_TEXT_SHOULD_NOT_PRINT",
+                        },
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            default_result = subprocess.run(
+                [sys.executable, str(SESSION_EXTRACT_SCRIPT), str(session)],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(default_result.returncode, 0, default_result.stderr)
+            self.assertIn("Last agent message: <hidden", default_result.stdout)
+            self.assertNotIn("SECRET_SESSION_TEXT_SHOULD_NOT_PRINT", default_result.stdout)
+
+            explicit_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SESSION_EXTRACT_SCRIPT),
+                    str(session),
+                    "--include-message",
+                    "--chars",
+                    "80",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(explicit_result.returncode, 0, explicit_result.stderr)
+            self.assertIn("SECRET_SESSION_TEXT_SHOULD_NOT_PRINT", explicit_result.stdout)
 
     def test_agent_e2e_fails_when_temp_trusted_project_pollutes_config(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -888,6 +1132,58 @@ class AgentE2EEvalTests(unittest.TestCase):
                 8,
             )
             self.assertEqual(real_noop["failures"], [])
+
+    def test_live_guard_restore_restores_config_contents(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            config_path = root / "config.toml"
+            config_path.write_text("model = \"safe\"\n", encoding="utf-8")
+
+            snapshot = _snapshot_live_guard_file_contents(root)
+            config_path.write_text(
+                (
+                    "model = \"safe\"\n\n"
+                    "[projects.\"/tmp/codex-agent-e2e-x\"]\n"
+                    "trust_level = \"trusted\"\n"
+                ),
+                encoding="utf-8",
+            )
+
+            restored = _restore_live_guard_files(root, snapshot)
+
+            self.assertEqual(restored, ["config.toml"])
+            self.assertEqual(config_path.read_text(encoding="utf-8"), "model = \"safe\"\n")
+
+    def test_live_guard_restore_removes_absent_guard_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir) / ".codex"
+            root.mkdir()
+            config_path = root / "config.toml"
+
+            snapshot = _snapshot_live_guard_file_contents(root)
+            config_path.write_text("model = \"new\"\n", encoding="utf-8")
+
+            restored = _restore_live_guard_files(root, snapshot)
+
+            self.assertEqual(restored, ["config.toml"])
+            self.assertFalse(config_path.exists())
+
+    def test_regression_gate_ok_recomputes_after_live_guard_restore(self):
+        entry = {
+            "contract_checks": {"failed": []},
+            "changed_policy_files": [],
+            "changed_live_guard_files": [],
+            "temporary_trusted_projects": {"count": 0},
+            "temp_workspace_cleaned": True,
+            "raw_marker_leaks": 0,
+            "fixed_json_sample": {"ok": True},
+            "fixed_session_sample": {"ok": True},
+            "plain_language": {"ok": True},
+            "restored_live_guard_files": ["config.toml"],
+        }
+
+        self.assertTrue(_regression_gate_payload_ok(entry))
 
     def test_agent_e2e_fake_real_noop_can_select_specific_tasks(self):
         with tempfile.TemporaryDirectory() as tmpdir:

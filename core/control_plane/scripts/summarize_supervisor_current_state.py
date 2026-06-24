@@ -15,6 +15,35 @@ DEFAULT_PACK_ROOT = Path(
         "~/.codex/project_assets/codex_home/supervisor",
     )
 ).expanduser()
+COMPLETE_FRONTIER_MARKERS = (
+    " complete",
+    "complete for",
+    "completed",
+    "no additional",
+    "no longer",
+    "final completion audit only",
+    "已完成",
+    "完成",
+)
+ACTIVE_FRONTIER_MARKERS = (
+    "harden ",
+    "run ",
+    "fix ",
+    "choose ",
+    "whether ",
+    "does ",
+    "优化",
+    "修复",
+    "运行",
+    "确认",
+)
+VALID_RECOVERY_STATES = {"active", "complete", "blocked", "unknown"}
+RECOVERY_STATE_MESSAGES = {
+    "active": "恢复卡显示当前边界仍在进行；继续时只处理这个边界。",
+    "complete": "恢复卡显示当前边界已经完成；继续前应先开新的单一优化面。",
+    "blocked": "恢复卡显示当前边界被阻塞；继续前应先解决阻塞或询问用户。",
+    "unknown": "恢复卡没有给出可靠状态；恢复时不能只靠摘要继续。",
+}
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -53,6 +82,11 @@ def _last_section(text: str, name: str) -> str:
     return instances[-1] if instances else ""
 
 
+def _latest_round_heading(text: str) -> str:
+    matches = re.findall(r"^##\s+(Round .+?)\s*$", text, flags=re.MULTILINE)
+    return matches[-1] if matches else ""
+
+
 def _current_phase(state_text: str) -> str:
     matches = re.findall(r"Current phase:\s*`([^`]+)`", state_text)
     return matches[-1] if matches else ""
@@ -76,6 +110,60 @@ def _first_bullets(section_text: str, limit: int = 8) -> List[str]:
     return bullets
 
 
+def _recovery_state(section_text: str) -> Dict[str, str]:
+    state: Dict[str, str] = {}
+    for line in section_text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            stripped = stripped[2:].strip()
+        if ":" not in stripped:
+            continue
+        key, value = stripped.split(":", 1)
+        key = key.strip().strip("`").lower()
+        value = value.strip().strip("`")
+        if key:
+            state[key] = value
+    raw_state = state.get("frontier_state", "").lower()
+    if raw_state not in VALID_RECOVERY_STATES:
+        raw_state = "unknown"
+    state["frontier_state"] = raw_state
+    return state
+
+
+def _frontier_status(
+    frontier_bullets: List[str],
+    recovery_state: Dict[str, str],
+) -> Dict[str, str]:
+    structured_state = recovery_state.get("frontier_state", "unknown")
+    if structured_state in {"active", "complete", "blocked"}:
+        return {
+            "state": structured_state,
+            "source": "recovery_state",
+            "plain_result": RECOVERY_STATE_MESSAGES[structured_state],
+        }
+    text = " ".join(frontier_bullets).strip()
+    lowered = " " + text.lower()
+    if not text:
+        return {
+            "state": "unknown",
+            "source": "missing_frontier",
+            "plain_result": RECOVERY_STATE_MESSAGES["unknown"],
+        }
+    complete_hit = any(marker in lowered for marker in COMPLETE_FRONTIER_MARKERS)
+    active_hit = any(marker in lowered for marker in ACTIVE_FRONTIER_MARKERS)
+    if complete_hit and not active_hit:
+        return {
+            "state": "complete",
+            "source": "frontier_text_fallback",
+            "plain_result": "摘要显示当前边界已经完成；继续前应先开新的单一优化面。",
+        }
+    return {
+        "state": "active",
+        "source": "frontier_text_fallback",
+        "plain_result": "摘要显示还有一个当前边界；继续时只处理这个边界。",
+    }
+
+
 def summarize_supervisor_current_state(pack_root: Path) -> Dict[str, Any]:
     ledger_path = pack_root / "supervisor_ledger.md"
     state_path = pack_root / "state_machine.md"
@@ -85,10 +173,15 @@ def summarize_supervisor_current_state(pack_root: Path) -> Dict[str, Any]:
     only_question = _last_section(ledger_text, "Only Question Next Round")
     forbidden = _last_section(ledger_text, "Forbidden Next Round")
     promotion = _last_section(ledger_text, "Promotion Gate")
+    recovery_state = _recovery_state(_last_section(ledger_text, "Recovery State"))
+    frontier_bullets = _first_bullets(current_frontier)
     return {
         "pack_root": pack_root.as_posix(),
+        "latest_round_heading": _latest_round_heading(ledger_text),
         "current_phase": _current_phase(state_text),
-        "current_frontier": _first_bullets(current_frontier),
+        "recovery_state": recovery_state,
+        "frontier_status": _frontier_status(frontier_bullets, recovery_state),
+        "current_frontier": frontier_bullets,
         "only_question": _first_bullets(only_question),
         "forbidden_next_round": _first_bullets(forbidden),
         "promotion_gate": _first_bullets(promotion),
@@ -97,6 +190,7 @@ def summarize_supervisor_current_state(pack_root: Path) -> Dict[str, Any]:
             "only_question": len(_section_instances(ledger_text, "Only Question Next Round")),
             "forbidden_next_round": len(_section_instances(ledger_text, "Forbidden Next Round")),
             "promotion_gate": len(_section_instances(ledger_text, "Promotion Gate")),
+            "recovery_state": len(_section_instances(ledger_text, "Recovery State")),
         },
         "privacy": {
             "read_only": True,
@@ -107,7 +201,10 @@ def summarize_supervisor_current_state(pack_root: Path) -> Dict[str, Any]:
 
 
 def _print_text(payload: Dict[str, Any]) -> None:
+    print("最新轮次：%s" % (payload["latest_round_heading"] or "未识别"))
     print("当前阶段：%s" % (payload["current_phase"] or "未识别"))
+    status = payload.get("frontier_status", {})
+    print("当前状态：%s" % (status.get("plain_result") or "未识别"))
     for label, key in [
         ("当前要解的问题", "current_frontier"),
         ("下一轮唯一问题", "only_question"),

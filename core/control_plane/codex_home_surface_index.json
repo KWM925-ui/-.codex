@@ -3,6 +3,30 @@
   "generated_for_layout_version": "2026-05-11.phase18",
   "root_surfaces": [
     {
+      "path": ".agents",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "environment_mount",
+      "category": "tool_environment",
+      "notes": "Tool-managed local environment mount placeholder; not part of reusable functional export."
+    },
+    {
+      "path": ".codex",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "environment_mount",
+      "category": "tool_environment",
+      "notes": "Tool-managed local environment mount placeholder; not part of reusable functional export."
+    },
+    {
+      "path": ".git",
+      "kind": "dir",
+      "layer": "runtime",
+      "status": "environment_mount",
+      "category": "development_metadata",
+      "notes": "Local Git metadata mount placeholder; never include in public functional export."
+    },
+    {
       "path": ".personality_migration",
       "kind": "file",
       "layer": "runtime",
@@ -195,12 +219,12 @@
       "notes": "Hot goal/runtime database sidecar currently owned by Codex runtime."
     },
     {
-      "path": "sample_project_supervisor",
+      "path": "pandeng_supervisor",
       "kind": "symlink",
       "layer": "project_assets",
       "status": "compatibility_symlink",
       "category": "project_entrypoint",
-      "notes": "Compatibility entrypoint to project_assets/sample_project/supervisor."
+      "notes": "Compatibility entrypoint to project_assets/pandeng/supervisor."
     },
     {
       "path": "plugins",
@@ -368,7 +392,7 @@
       "layer": "project_assets",
       "status": "compatibility_symlink",
       "category": "project_entrypoint",
-      "notes": "Compatibility entrypoint to project_assets/sample_project/evidence/worktree_snapshots."
+      "notes": "Compatibility entrypoint to project_assets/pandeng/evidence/worktree_snapshots."
     }
   ]
 }
